@@ -107,10 +107,9 @@ body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-s
 var SB_URL  = 'PEGAR_URL_SUPABASE';
 var SB_ANON = 'PEGAR_ANON_KEY';
 
-// Base INTERNA del Smart Snippet (solo se usa para el sync, solo tabla `projects`).
-// La URL es pública; la CLAVE no se guarda en este archivo a propósito: se pega una
-// vez en la pestaña Sincronizar y queda en el navegador del admin (localStorage).
-var INTERNAL_SB_URL = 'https://xyqmtqsczscdejcwusce.supabase.co';
+// El sync corre en el servidor (función /api/sync en Vercel): lee la base interna
+// del Smart Snippet con claves que viven como variables de entorno, nunca en este
+// archivo. Además corre solo todos los días por cron (ver vercel.json).
 
 // Cuántos días hacia atrás se publican a prospectos.
 var SYNC_DAYS = 30;
@@ -125,9 +124,6 @@ var SECTOR_OTRO = 'Otros', JUR_OTRA = 'Otras';
 var SECTOR_PICK = SECTORES.concat([SECTOR_OTRO]);
 var JUR_PICK = JUR_ORDER.concat([JUR_OTRA]);
 
-// Campos que se publican de cada proyecto (whitelist: cualquier otro campo se descarta).
-var PROJ_FIELDS = ['id','num','sector','jur','tema','org','autor','title','resumen','linkExpediente','linkTexto','fecha'];
-
 var ADMIN_PASS = null, OV = {accounts: [], dates: []}, tab = 'cuentas', openAcc = {};
 
 /* ============================================================
@@ -140,8 +136,6 @@ function isoPlusDays(n) { var d=new Date(); d.setDate(d.getDate()+n); var p=func
 function isoToDisplay(iso) { if(!iso)return ''; var p=String(iso).split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
 function showOverlay(msg) { document.getElementById('overlay').classList.add('show'); document.getElementById('overlay-msg').textContent = msg||'Cargando...'; }
 function hideOverlay() { document.getElementById('overlay').classList.remove('show'); }
-function canonSector(s) { var n=norm(s); for(var i=0;i<SECTORES.length;i++) if(norm(SECTORES[i])===n) return SECTORES[i]; return SECTOR_OTRO; }
-function canonJur(j) { var n=norm(j); for(var i=0;i<JUR_ORDER.length;i++) if(norm(JUR_ORDER[i])===n) return JUR_ORDER[i]; return JUR_OTRA; }
 function agoLabel(ts) {
   if (!ts) return 'nunca';
   var diff = Math.floor((Date.now() - new Date(ts).getTime())/86400000);
@@ -383,23 +377,12 @@ async function deleteAccount(id, user) {
 /* ============================================================
    PESTAÑA SINCRONIZAR
    ============================================================ */
-function internalKey() { try { return localStorage.getItem('dls_internal_key')||''; } catch(e){ return ''; } }
-function setInternalKey(k) { try { localStorage.setItem('dls_internal_key', k); } catch(e){} }
-
 function renderSync() {
-  var hasKey = !!internalKey();
   var h = '<div class="admin-body">';
   h += '<div class="admin-card">';
   h += '<div class="admin-card-title"><i class="ti ti-refresh"></i> Sincronizar proyectos</div>';
-  h += '<div class="admin-card-sub">Copia los proyectos de ley de los últimos '+SYNC_DAYS+' días desde el Smart Snippet interno a la base de prospectos. Solo se copian los proyectos (título, resumen, links) — <b>nunca</b> las calificaciones de impacto ni datos de clientes. Corré esto después de cargar el snippet del día.</div>';
-  if (!hasKey) {
-    h += '<div class="alert info" style="margin:0 0 12px">Primera vez en este navegador: pegá la clave pública (anon) de la base <b>interna</b> del Smart Snippet. Queda guardada solo en este navegador.</div>';
-    h += '<div class="field" style="margin-bottom:10px"><label>Clave anon de la base interna</label><input type="text" id="int-key" style="font-family:monospace" placeholder="sb_publishable_..."></div>';
-    h += '<div class="btn-row"><button class="btn primary" onclick="saveInternalKey()"><i class="ti ti-device-floppy"></i> Guardar clave</button></div>';
-  } else {
-    h += '<div class="btn-row" style="margin-top:0"><button class="btn primary" onclick="doSync()"><i class="ti ti-refresh"></i> Sincronizar últimos '+SYNC_DAYS+' días</button>';
-    h += '<button class="btn sm" onclick="if(confirm(\'¿Borrar la clave interna guardada en este navegador?\')){localStorage.removeItem(\'dls_internal_key\');renderSync();}"><i class="ti ti-key-off"></i> Cambiar clave interna</button></div>';
-  }
+  h += '<div class="admin-card-sub">La sincronización corre <b>sola todos los días a las 12:00</b> (cron en Vercel): copia los proyectos de ley de los últimos '+SYNC_DAYS+' días desde el Smart Snippet interno. Solo se copian los proyectos (título, resumen, links) — <b>nunca</b> las calificaciones de impacto ni datos de clientes. Usá el botón si cargaste el snippet más tarde y no querés esperar al cron de mañana.</div>';
+  h += '<div class="btn-row" style="margin-top:0"><button class="btn primary" id="sync-btn" onclick="doSync()"><i class="ti ti-refresh"></i> Sincronizar ahora</button></div>';
   h += '<div id="sync-msg"></div>';
   h += '<div id="sync-log" style="margin-top:12px"></div>';
   h += '</div>';
@@ -418,57 +401,35 @@ function renderSync() {
   document.getElementById('app').innerHTML = h;
 }
 
-function saveInternalKey() {
-  var k = (document.getElementById('int-key').value||'').trim();
-  if (!k) return;
-  setInternalKey(k); renderSync();
-}
-
-// Limpia un proyecto para publicar: whitelist de campos + sector/jur canónicos.
-function sanitizeProject(p) {
-  var out = {};
-  PROJ_FIELDS.forEach(function(f){ if (p[f] != null) out[f] = p[f]; });
-  out.sector = canonSector(out.sector);
-  out.jur = canonJur(out.jur);
-  return out;
-}
-
+// Llama a la función serverless /api/sync (misma que dispara el cron diario).
 async function doSync() {
-  var key = internalKey();
-  var cutoff = isoPlusDays(-SYNC_DAYS);
-  msgIn('sync-msg','info','Leyendo la base interna...');
+  var btn = document.getElementById('sync-btn'); if (btn) btn.disabled = true;
+  msgIn('sync-msg','info','Sincronizando (puede tardar unos segundos)...');
   document.getElementById('sync-log').innerHTML = '';
-  var rows;
+  var res;
   try {
-    var r = await fetch(INTERNAL_SB_URL + '/rest/v1/projects?select=date,data&date=gte.' + cutoff + '&order=date.desc', {
-      headers: {'apikey': key, 'Authorization': 'Bearer ' + key}
+    var r = await fetch('/api/sync', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({admin: ADMIN_PASS})
     });
-    if (!r.ok) throw new Error('HTTP ' + r.status + (r.status===401||r.status===403 ? ' — ¿clave interna incorrecta?' : ''));
-    rows = await r.json();
-  } catch(e) { msgIn('sync-msg','error','No se pudo leer la base interna: '+esc(e.message)); return; }
-  if (!rows.length) { msgIn('sync-msg','info','La base interna no tiene proyectos en los últimos '+SYNC_DAYS+' días.'); return; }
+    if (r.status === 404) throw new Error('El endpoint /api/sync no existe acá. Abrí el admin desde la URL de Vercel (el sync no funciona desde GitHub Pages ni desde un archivo local).');
+    res = await r.json();
+    if (r.status === 401) throw new Error(res.error || 'No autorizado.');
+  } catch(e) { if (btn) btn.disabled = false; msgIn('sync-msg','error',esc(e.message)); return; }
+  if (btn) btn.disabled = false;
 
-  var log = document.getElementById('sync-log'), ok = 0, fail = 0;
-  for (var i = 0; i < rows.length; i++) {
-    var row = rows[i];
-    var clean = (row.data||[]).map(sanitizeProject);
-    var stHtml;
-    try {
-      await adminRpc('admin_sync_projects', {p_date: row.date, p_data: clean});
-      ok++; stHtml = '<span class="sync-st ok"><i class="ti ti-check"></i> publicado</span>';
-    } catch(e) {
-      fail++; stHtml = '<span class="sync-st err"><i class="ti ti-x"></i> error</span>';
-    }
-    log.innerHTML += '<div class="sync-row"><span class="sync-date">'+esc(isoToDisplay(row.date))+'</span><span class="sync-n">'+clean.length+' proyecto'+(clean.length!==1?'s':'')+'</span>'+stHtml+'</div>';
-  }
-  msgIn('sync-msg', fail? 'error':'success', fail
-    ? 'Sincronización con errores: '+ok+' día(s) publicados, '+fail+' fallaron. Reintentá.'
-    : 'Listo: '+ok+' día(s) publicados a la base de prospectos.');
+  var log = document.getElementById('sync-log');
+  (res.log||[]).forEach(function(d){
+    var st = d.ok ? '<span class="sync-st ok"><i class="ti ti-check"></i> publicado</span>'
+                  : '<span class="sync-st err"><i class="ti ti-x"></i> '+esc(d.error||'error')+'</span>';
+    log.innerHTML += '<div class="sync-row"><span class="sync-date">'+esc(isoToDisplay(d.date))+'</span><span class="sync-n">'+d.count+' proyecto'+(d.count!==1?'s':'')+'</span>'+st+'</div>';
+  });
+  msgIn('sync-msg', res.ok?'success':'error', res.ok
+    ? 'Listo: '+res.days+' día(s) publicados a la base de prospectos.'
+    : (res.error ? esc(res.error) : 'Sincronización con errores: '+(res.days-res.failed)+' día(s) publicados, '+res.failed+' fallaron. Reintentá.'));
   await loadOverview();
-  // refresco solo el panel "publicado actualmente" sin pisar el log
-  renderSyncStatusOnly();
 }
-function renderSyncStatusOnly() { /* re-render completo mantiene el log simple: no hacer nada */ }
 
 /* ============================================================
    ARRANQUE
