@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Legal Snippet — Quipu Advisors</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.31.0/iconfont/tabler-icons.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#F4F3EF;--surface:#FFFFFF;--border:#DDD9D2;--border-light:#E9E6DF;--text:#2C2C2A;--text2:#5F5E5A;--text3:#888780;--blue:#395279;--blue-bg:#E8EEF5;--blue-dark:#2D4060;--accent:#C0714D;--accent-bg:#FDF5F0;--accent-border:#E8C4A8;--green-bg:#EAF3DE;--green:#3B6D11;--green-border:#639922;--red-bg:#FCEBEB;--red:#791F1F;--red-border:#F09595;--radius:6px;--radius-lg:8px;}
+body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+.nav{display:flex;align-items:center;background:var(--blue);border-bottom:2px solid var(--accent);padding:0 1.25rem;height:48px;flex-wrap:wrap}
+.nav-logo{font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:7px;color:#fff}
+.nav-logo span{color:var(--accent)}
+.nav-sub{font-size:10px;color:#A8BCD4;font-weight:400;letter-spacing:.06em;text-transform:uppercase;margin-left:12px}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.nav-exp{font-size:11px;color:#A8BCD4;font-weight:300}
+.nav-user{display:flex;align-items:center;gap:6px;font-size:12px;color:#E8EEF5;font-weight:600}
+.nav-user i{font-size:17px;color:var(--accent)}
+.nav-logout{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:5px 12px;border-radius:var(--radius);border:1px solid rgba(255,255,255,.28);background:transparent;color:#CBD7E6;cursor:pointer}
+.nav-logout:hover{border-color:var(--accent);color:#fff;background:var(--accent)}
+#app{flex:1;display:flex;flex-direction:column}
+.login-wrap{display:flex;align-items:center;justify-content:center;flex:1;padding:2rem}
+.login-card{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:var(--radius-lg);padding:2.25rem 2rem;width:100%;max-width:400px;box-shadow:0 8px 30px rgba(57,82,121,.08)}
+.login-brand{font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);margin-bottom:2px}
+.login-brand span{color:var(--accent)}
+.login-by{font-size:11px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:1.5rem}
+.gate-input{width:100%;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);outline:none;margin-bottom:10px;font-family:inherit}
+.gate-input:focus{border-color:var(--blue)}
+.login-err{font-size:12px;color:var(--red);background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px;display:none;line-height:1.45}
+.login-err.show{display:block}
+.login-foot{text-align:center;margin-top:16px;font-size:11px;color:var(--text3);line-height:1.5}
+.login-foot a{color:var(--accent);text-decoration:none;font-weight:600}
+.toolbar{display:flex;align-items:center;gap:10px;padding:.65rem 1.25rem;border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap;position:relative}
+.toolbar label{font-size:13px;color:var(--text2)}
+.tb-sep{width:1px;align-self:stretch;background:var(--border);margin:2px 6px}
+.tb-search{display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+.tb-search:focus-within{border-color:var(--blue)}
+.tb-search i{color:var(--text3);font-size:15px;flex-shrink:0}
+.tb-search input{border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;color:var(--text);width:220px;max-width:40vw}
+.dd-wrap{position:relative}
+.dd-btn{font-size:13px;height:30px;padding:0 28px 0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;min-width:140px;text-align:left;position:relative;font-family:inherit}
+.dd-btn::after{content:'';position:absolute;right:10px;top:50%;transform:translateY(-50%);border:4px solid transparent;border-top-color:var(--text3);margin-top:2px}
+.dd-menu{display:none;position:absolute;top:34px;left:0;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);min-width:200px;padding:4px 0;box-shadow:0 4px 12px rgba(0,0,0,.08);max-height:320px;overflow-y:auto}
+.dd-menu.open{display:block}
+.dd-item{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:13px;cursor:pointer;user-select:none}
+.dd-item:hover{background:var(--bg)}
+.dd-item input[type=checkbox]{width:14px;height:14px;accent-color:var(--blue);cursor:pointer;flex-shrink:0}
+.dd-divider{border:none;border-top:1px solid var(--border-light);margin:3px 0}
+.list{padding:1.75rem 2rem;display:flex;flex-direction:column;gap:10px;max-width:1100px;margin:0 auto;width:100%}
+.date-hdr{font-size:14px;font-weight:600;color:var(--text);padding:10px 0 8px;border-bottom:2px solid var(--blue);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.date-hdr i{color:var(--blue);font-size:16px}
+.hoy-nuevos{color:var(--accent);font-weight:700;font-size:13px;margin-left:auto}
+.group-sector-title{font-size:13px;font-weight:700;color:var(--text);padding:14px 0 8px;margin-bottom:6px}
+.group-jur-title{font-size:9px;font-weight:700;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;padding:6px 0 4px;margin-top:4px}
+.group-jur-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
+.card{position:relative;border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;background:var(--surface);cursor:pointer;display:flex;gap:14px;align-items:flex-start;transition:border-color .12s,box-shadow .12s}
+.card:not(.sel):hover{border-color:var(--accent-border);box-shadow:0 1px 6px rgba(57,82,121,.06)}
+.card.sel{border:1.5px solid var(--blue);box-shadow:0 2px 10px rgba(57,82,121,.08)}
+.card.sel .ctitle{color:var(--blue);margin-bottom:8px}
+.card.nuevo{border-left:3px solid var(--accent)}
+.card-nuevo{position:absolute;top:0;right:0;background:var(--accent);color:#fff;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:0 8px 0 8px}
+.cinfo{flex:1;min-width:0}
+.ctitle{font-size:16px;font-weight:600;line-height:1.4}
+.cmeta-min{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.cmeta{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px;align-items:center}
+.pill{font-size:11px;padding:2px 7px;border-radius:var(--radius);font-weight:500}
+.p-num{background:#F1EFE8;color:#5F5E5A;font-weight:600}
+.p-org{background:#F1EFE8;color:#5F5E5A;font-weight:400}
+.p-fecha{background:var(--bg);color:var(--text2);font-weight:400}
+.p-tema{background:var(--blue-bg);color:var(--blue);border:0.5px solid #C3D2E6}
+.p-jur{background:var(--accent-bg);color:var(--accent);border:0.5px solid var(--accent-border)}
+.card-chev{margin-left:auto;align-self:center;color:var(--text3);opacity:.4;font-size:18px;flex-shrink:0;transition:opacity .12s}
+.card:not(.sel):hover .card-chev{opacity:.85}
+.cautor{font-size:12px;color:var(--text);font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:5px}
+.cautor i{color:var(--accent)}
+.cresumen{font-size:14px;color:var(--text2);line-height:1.55}
+.clink{font-size:11px;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:3px}
+.empty{text-align:center;padding:3rem;color:var(--text3);font-size:13px}
+.footer{padding:1.25rem 2rem;border-top:1px solid var(--border);background:var(--surface);margin-top:auto}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.footer-txt{font-size:11px;color:var(--text3);line-height:1.55;flex:1;min-width:260px}
+.footer-cta{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);background:var(--accent);color:#fff;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
+.footer-cta:hover{background:#A85E3D}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.overlay-box{background:var(--surface);border-radius:var(--radius-lg);padding:2rem;text-align:center;max-width:320px}
+.spin{font-size:36px;color:var(--blue);display:block;margin-bottom:12px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:var(--radius);border:1px solid var(--blue);background:var(--blue);color:#fff;font-size:13px;cursor:pointer;font-weight:600;width:100%;font-family:inherit}
+.btn:hover{background:var(--blue-dark)}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="overlay-box"><i class="ti ti-loader-2 spin"></i><p id="overlay-msg">Cargando...</p></div>
+</div>
+<nav class="nav">
+  <div class="nav-logo"><i class="ti ti-news" style="color:var(--accent)"></i> Daily Legal <span>Snippet</span></div>
+  <span class="nav-sub">by Quipu Advisors</span>
+  <div class="nav-right" id="nav-right"></div>
+</nav>
+<div id="app"></div>
+<script>
+/* ============================================================
+   CONFIGURACION
+   ============================================================ */
+// >>> Datos del proyecto Supabase del Daily Legal Snippet (NO el del Smart Snippet interno).
+var SB_URL  = 'PEGAR_URL_SUPABASE';
+var SB_ANON = 'PEGAR_ANON_KEY';
+// Email de contacto comercial que aparece en el pie.
+var CONTACT_EMAIL = 'lucas.martinez@quipuadvisors.com';
+
+/* ============================================================
+   CAPA SUPABASE — todo pasa por funciones RPC (la clave anon
+   no puede leer ninguna tabla directamente; RLS cerrado).
+   ============================================================ */
+async function rpc(fn, args) {
+  var r = await fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+    method: 'POST',
+    headers: {'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON, 'Content-Type': 'application/json'},
+    body: JSON.stringify(args || {})
+  });
+  var t = await r.text();
+  if (!r.ok) throw new Error('DB ' + r.status + (t ? ': ' + t.slice(0, 120) : ''));
+  return t ? JSON.parse(t) : null;
+}
+
+/* ============================================================
+   CONSTANTES (orden de agrupado; deben coincidir con la app interna)
+   ============================================================ */
+var SECTORES = ['Coyuntura general','Consumo masivo','Medios de pago','Tecnologia','Automotriz','Agroindustria','Petroquimicos','Mineria','Turismo','Salud','Ambiente'];
+var PROVINCIAS = ['CABA','Buenos Aires','Catamarca','Chaco','Chubut','Cordoba','Corrientes','Entre Rios','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquen','Rio Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucuman'];
+var JUR_ORDER = ['Nacional'].concat(PROVINCIAS).concat(['Municipal']);
+var SECTOR_OTRO = 'Otros', JUR_OTRA = 'Otras';
+
+var ACCOUNT = null;          // {display_name, sectors, jurs, expires_at}
+var DAYS = [];               // [{date, data:[...]}] tal como los devuelve el servidor
+var expanded = {}, searchQ = '';
+var mySectors = [], myJurs = [];   // universo de filtros de ESTA cuenta
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+function esc(s) { return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function safeUrl(u) { u = String(u||'').trim(); return /^https?:\/\//i.test(u) ? esc(u) : ''; }
+function norm(s) { return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
+function isoToday() { var d=new Date(),p=function(n){return (n<10?'0':'')+n;}; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function isoToDisplay(iso) { if(!iso)return ''; var p=String(iso).split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function showOverlay(msg) { document.getElementById('overlay').classList.add('show'); document.getElementById('overlay-msg').textContent = msg||'Cargando...'; }
+function hideOverlay() { document.getElementById('overlay').classList.remove('show'); }
+var DIAS_ES=['Domingo','Lunes','Martes','Miercoles','Jueves','Viernes','Sabado'], MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function fechaLabel(iso) {
+  var p = String(iso).split('-'); if (p.length !== 3) return iso;
+  var y=parseInt(p[0]), m=parseInt(p[1])-1, d=parseInt(p[2]);
+  var date = new Date(y,m,d);
+  var today = new Date(); today.setHours(0,0,0,0);
+  var diff = Math.round((today - date)/86400000);
+  var extra = diff===0 ? ' — Hoy' : diff===1 ? ' — Ayer' : '';
+  return DIAS_ES[date.getDay()]+' '+d+' de '+MESES[m]+' de '+y+extra;
+}
+
+/* ============================================================
+   SESION (credenciales en el navegador del prospecto)
+   ============================================================ */
+function savedAuth() { try { return JSON.parse(localStorage.getItem('dls_auth')||'null'); } catch(e){ return null; } }
+function setAuth(a) { try { if(a) localStorage.setItem('dls_auth', JSON.stringify(a)); else localStorage.removeItem('dls_auth'); } catch(e){} }
+function logout() { setAuth(null); ACCOUNT=null; DAYS=[]; buildNav(); renderLogin(); }
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function renderLogin(msg) {
+  buildNav();
+  var h = '<div class="login-wrap"><div class="login-card">';
+  h += '<div class="login-by">Quipu Advisors</div>';
+  h += '<div class="login-brand">Daily Legal <span>Snippet</span></div>';
+  h += '<div class="login-sub">Monitoreo legislativo diario — Argentina, nacional y provincias.</div>';
+  h += '<div class="login-err'+(msg?' show':'')+'" id="login-err">'+esc(msg||'')+'</div>';
+  h += '<input type="text" class="gate-input" id="lg-user" placeholder="Usuario" autocomplete="username">';
+  h += '<input type="password" class="gate-input" id="lg-pass" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')doLogin()">';
+  h += '<button class="btn" onclick="doLogin()"><i class="ti ti-login-2"></i> Ingresar</button>';
+  h += '<div class="login-foot">¿No tenés acceso o venció tu prueba?<br><a href="mailto:'+esc(CONTACT_EMAIL)+'">Escribinos</a> y te lo habilitamos.</div>';
+  h += '</div></div>';
+  document.getElementById('app').innerHTML = h;
+  var u = document.getElementById('lg-user'); if (u) u.focus();
+}
+
+var LOGIN_REASONS = {
+  credenciales: 'Usuario o contraseña incorrectos.',
+  inactiva: 'Tu cuenta está desactivada. Escribinos para reactivarla.',
+  vencida: 'Tu período de prueba finalizó. Escribinos para extenderlo o pasar a la versión completa.'
+};
+
+async function doLogin() {
+  var u = (document.getElementById('lg-user').value||'').trim();
+  var p = document.getElementById('lg-pass').value||'';
+  if (!u || !p) return;
+  showOverlay('Verificando acceso...');
+  var res;
+  try { res = await rpc('prospect_login', {p_user: u, p_pass: p}); }
+  catch(e) { hideOverlay(); renderLogin('No pudimos conectar con el servidor. Probá de nuevo en un momento.'); return; }
+  hideOverlay();
+  if (!res || !res.ok) { renderLogin(LOGIN_REASONS[(res&&res.reason)||'credenciales'] || LOGIN_REASONS.credenciales); return; }
+  ACCOUNT = res; setAuth({u: u, p: p});
+  await enterApp(u, p);
+}
+
+async function enterApp(u, p) {
+  showOverlay('Cargando proyectos...');
+  var res;
+  try { res = await rpc('prospect_projects', {p_user: u, p_pass: p}); }
+  catch(e) { hideOverlay(); renderLogin('No pudimos cargar los proyectos. Probá de nuevo.'); return; }
+  hideOverlay();
+  if (!res || !res.ok) { logout(); return; }
+  DAYS = res.days || [];
+  // Universo de filtros: lo permitido para la cuenta ([] = todo).
+  mySectors = (ACCOUNT.sectors && ACCOUNT.sectors.length) ? ACCOUNT.sectors.slice() : SECTORES.concat([SECTOR_OTRO]);
+  myJurs = (ACCOUNT.jurs && ACCOUNT.jurs.length) ? ACCOUNT.jurs.slice() : JUR_ORDER.concat([JUR_OTRA]);
+  expanded = {}; searchQ = '';
+  buildNav(); renderMain();
+}
+
+function buildNav() {
+  var right = document.getElementById('nav-right');
+  if (!ACCOUNT) { right.innerHTML=''; return; }
+  var h = '';
+  if (ACCOUNT.expires_at) h += '<span class="nav-exp"><i class="ti ti-calendar-due" style="font-size:12px"></i> Acceso hasta el '+esc(isoToDisplay(ACCOUNT.expires_at))+'</span>';
+  h += '<span class="nav-user"><i class="ti ti-building"></i> '+esc(ACCOUNT.display_name||'')+'</span>';
+  h += '<button class="nav-logout" onclick="logout()">Salir</button>';
+  right.innerHTML = h;
+}
+
+/* ============================================================
+   VISTA PRINCIPAL (solo lectura)
+   ============================================================ */
+function renderMain() {
+  var h = '<div class="toolbar">';
+  h += '<div class="tb-search"><i class="ti ti-search"></i><input type="text" id="search-q" placeholder="Buscar título, autor, número…" value="'+esc(searchQ)+'" oninput="setSearch(this.value)"></div>';
+  h += '<span class="tb-sep"></span>';
+  h += '<label>Sector</label><div class="dd-wrap"><button class="dd-btn" id="dd-sec-btn" onclick="toggleMenu(\'sec\',event)">Todos</button>';
+  h += '<div class="dd-menu" id="dd-sec-menu"><div class="dd-item" onclick="toggleAll(\'sec\',event)"><input type="checkbox" id="chk-all-sec" checked> Todos</div><hr class="dd-divider"><div id="sec-items"></div></div></div>';
+  h += '<label>Jurisdicción</label><div class="dd-wrap"><button class="dd-btn" id="dd-jur-btn" onclick="toggleMenu(\'jur\',event)">Todas</button>';
+  h += '<div class="dd-menu" id="dd-jur-menu"><div class="dd-item" onclick="toggleAll(\'jur\',event)"><input type="checkbox" id="chk-all-jur" checked> Todas</div><hr class="dd-divider"><div id="jur-items"></div></div></div>';
+  h += '</div>';
+  h += '<div class="list" id="list"></div>';
+  h += '<div class="footer"><div class="footer-inner">';
+  h += '<div class="footer-txt"><b>Daily Legal Snippet</b> es una muestra de cortesía del monitoreo legislativo de <b>Quipu Advisors</b> (últimos 30 días). No constituye asesoramiento legal. La versión completa incluye histórico, análisis de impacto por industria y alertas personalizadas.</div>';
+  h += '<a class="footer-cta" href="mailto:'+esc(CONTACT_EMAIL)+'?subject='+encodeURIComponent('Daily Legal Snippet — versión completa')+'"><i class="ti ti-mail"></i> Quiero la versión completa</a>';
+  h += '</div></div>';
+  document.getElementById('app').innerHTML = h;
+  buildFilters(); renderList();
+}
+
+function buildFilters() {
+  var si = document.getElementById('sec-items');
+  if (si) si.innerHTML = mySectors.map(function(s){ return '<div class="dd-item" onclick="toggleChk(this,event)"><input type="checkbox" class="sec-chk" value="'+esc(s)+'" checked> '+esc(s)+'</div>'; }).join('');
+  var ji = document.getElementById('jur-items');
+  if (ji) ji.innerHTML = myJurs.map(function(j){ return '<div class="dd-item" onclick="toggleChk(this,event)"><input type="checkbox" class="jur-chk" value="'+esc(j)+'" checked> '+esc(j)+'</div>'; }).join('');
+}
+function setSearch(v) { searchQ = v||''; renderList(); }
+function toggleMenu(type,e) { e.stopPropagation(); var id='dd-'+type+'-menu', other=type==='sec'?'dd-jur-menu':'dd-sec-menu'; document.getElementById(other).classList.remove('open'); document.getElementById(id).classList.toggle('open'); }
+function toggleChk(row,e) { e.stopPropagation(); var chk=row.querySelector('input'); if(e.target!==chk)chk.checked=!chk.checked; updateBtns(); renderList(); }
+function toggleAll(type,e) {
+  e.stopPropagation();
+  var a=document.getElementById('chk-all-'+type); if(e.target!==a)a.checked=!a.checked;
+  document.querySelectorAll('.'+type+'-chk').forEach(function(c){c.checked=a.checked;});
+  updateBtns(); renderList();
+}
+function actives(cls) { return Array.from(document.querySelectorAll('.'+cls+':checked')).map(function(c){return c.value;}); }
+function updateBtns() {
+  [['sec','Todos','Ninguno','sectores'],['jur','Todas','Ninguna','jurisdicciones']].forEach(function(cfg){
+    var a=actives(cfg[0]+'-chk'), total=document.querySelectorAll('.'+cfg[0]+'-chk').length;
+    var btn=document.getElementById('dd-'+cfg[0]+'-btn'), ac=document.getElementById('chk-all-'+cfg[0]);
+    if(!btn)return;
+    if(!a.length){btn.textContent=cfg[2];ac.checked=false;ac.indeterminate=false;}
+    else if(a.length===total){btn.textContent=cfg[1];ac.checked=true;ac.indeterminate=false;}
+    else if(a.length===1){btn.textContent=a[0];ac.checked=false;ac.indeterminate=true;}
+    else{btn.textContent=a.length+' '+cfg[3];ac.checked=false;ac.indeterminate=true;}
+  });
+}
+document.addEventListener('click', function(){ ['dd-sec-menu','dd-jur-menu'].forEach(function(id){ var m=document.getElementById(id); if(m)m.classList.remove('open'); }); });
+
+function allSecSelected() { return actives('sec-chk').length === document.querySelectorAll('.sec-chk').length; }
+
+function renderList() {
+  var list = document.getElementById('list'); if (!list) return;
+  var aS = actives('sec-chk'), aJ = actives('jur-chk');
+  var q = norm(searchQ);
+  var today = isoToday();
+  var any = false, h = '';
+  var SEC_ORDER = SECTORES.concat([SECTOR_OTRO]);
+  var JUR_FULL = JUR_ORDER.concat([JUR_OTRA]);
+  DAYS.forEach(function(day) {
+    var ps = (day.data||[]).filter(function(p){
+      if (aS.indexOf(p.sector)<0 || aJ.indexOf(p.jur)<0) return false;
+      if (q && norm((p.title||'')+' '+(p.num||'')+' '+(p.resumen||'')+' '+(p.autor||'')+' '+(p.tema||'')+' '+(p.org||'')).indexOf(q)<0) return false;
+      return true;
+    });
+    if (!ps.length) return;
+    any = true;
+    var esHoy = day.date === today;
+    h += '<div style="margin-bottom:1.5rem">';
+    h += '<div class="date-hdr"><i class="ti ti-calendar"></i>Reportados el '+esc(fechaLabel(day.date));
+    if (esHoy) h += '<span class="hoy-nuevos">'+ps.length+' proyecto'+(ps.length!==1?'s':'')+' nuevo'+(ps.length!==1?'s':'')+'</span>';
+    h += '</div>';
+    if (allSecSelected()) {
+      SEC_ORDER.forEach(function(sec) {
+        var sp = ps.filter(function(p){return p.sector===sec;}); if (!sp.length) return;
+        h += '<div class="group-sector-title">'+esc(sec)+'</div>';
+        JUR_FULL.forEach(function(jur){ var jp=sp.filter(function(p){return p.jur===jur;}); if(!jp.length)return; h+='<div class="group-jur-title">'+esc(jur)+'</div><div class="group-jur-cards">'+jp.map(function(p){return cardHTML(p,esHoy);}).join('')+'</div>'; });
+      });
+    } else {
+      h += '<div class="group-jur-cards">'+ps.map(function(p){return cardHTML(p,esHoy);}).join('')+'</div>';
+    }
+    h += '</div>';
+  });
+  if (!any) {
+    list.innerHTML = '<div class="empty"><i class="ti ti-inbox" style="font-size:28px;display:block;margin:0 auto 10px"></i>'+(DAYS.length?'No hay proyectos con esos filtros.':'Todavía no hay proyectos publicados. Volvé a entrar más tarde.')+'</div>';
+    return;
+  }
+  list.innerHTML = h;
+}
+
+function cardHTML(p, esHoy) {
+  var id = String(p.id);
+  var isExp = !!expanded[id];
+  var lx = safeUrl(p.linkExpediente), lt = safeUrl(p.linkTexto);
+  var tema = (p.tema && norm(p.tema)!=='otro') ? p.tema : '';
+  var h = '<div class="card'+(isExp?' sel':'')+(esHoy?' nuevo':'')+'" onclick="toggleCard(\''+id+'\',event)">';
+  if (esHoy) h += '<span class="card-nuevo">Nuevo</span>';
+  h += '<div class="cinfo">';
+  h += '<div class="ctitle">'+esc(p.title)+'</div>';
+  if (isExp) {
+    h += '<div class="cmeta">';
+    if (p.fecha) h += '<span class="pill p-fecha"><i class="ti ti-calendar" style="font-size:10px"></i> '+esc(p.fecha)+'</span>';
+    if (p.num) h += '<span class="pill p-num">'+esc(p.num)+'</span>';
+    if (tema) h += '<span class="pill p-tema">'+esc(tema)+'</span>';
+    if (p.jur) h += '<span class="pill p-jur">'+esc(p.jur)+'</span>';
+    if (p.org) h += '<span class="pill p-org">'+esc(p.org)+'</span>';
+    if (lx) h += '<a href="'+lx+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-link" style="font-size:11px"></i> Expediente</a>';
+    if (lt) h += '<a href="'+lt+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-file-text" style="font-size:11px"></i> Texto</a>';
+    h += '</div>';
+    if (p.autor) h += '<div class="cautor"><i class="ti ti-user" style="font-size:12px"></i> '+esc(p.autor)+'</div>';
+    h += '<div class="cresumen">El proyecto de ley tiene por objeto '+esc(p.resumen||'')+'</div>';
+  } else {
+    h += '<div class="cmeta-min">';
+    if (tema) h += '<span class="pill p-tema">'+esc(tema)+'</span>';
+    h += '</div>';
+  }
+  h += '</div>';
+  if (!isExp) h += '<i class="ti ti-chevron-down card-chev"></i>';
+  h += '</div>';
+  return h;
+}
+
+function toggleCard(id,e) { id=String(id); if(e.target.tagName==='A')return; if(expanded[id]){delete expanded[id];}else{expanded[id]=true;} renderList(); }
+
+/* ============================================================
+   ARRANQUE
+   ============================================================ */
+(async function init() {
+  if (SB_URL.indexOf('PEGAR') === 0) {
+    document.getElementById('app').innerHTML = '<div class="empty" style="padding:4rem"><i class="ti ti-settings" style="font-size:28px;display:block;margin:0 auto 10px"></i>Configuración pendiente: falta pegar la URL y la clave del proyecto Supabase en index.html.</div>';
+    return;
+  }
+  var a = savedAuth();
+  if (!a) { renderLogin(); return; }
+  showOverlay('Ingresando...');
+  var res = null;
+  try { res = await rpc('prospect_login', {p_user: a.u, p_pass: a.p}); } catch(e) {}
+  hideOverlay();
+  if (res && res.ok) { ACCOUNT = res; await enterApp(a.u, a.p); }
+  else { setAuth(null); renderLogin(res && res.reason ? LOGIN_REASONS[res.reason] : undefined); }
+})();
+</script>
+</body>
+</html>

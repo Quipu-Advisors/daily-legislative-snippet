@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Legal Snippet — Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.31.0/iconfont/tabler-icons.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#F4F3EF;--surface:#FFFFFF;--border:#DDD9D2;--border-light:#E9E6DF;--text:#2C2C2A;--text2:#5F5E5A;--text3:#888780;--blue:#395279;--blue-bg:#E8EEF5;--blue-dark:#2D4060;--accent:#C0714D;--accent-bg:#FDF5F0;--accent-border:#E8C4A8;--green-bg:#EAF3DE;--green:#3B6D11;--green-border:#639922;--red-bg:#FCEBEB;--red:#791F1F;--red-border:#F09595;--yellow-bg:#FEF3E2;--yellow:#7A4A00;--radius:6px;--radius-lg:8px;}
+body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.nav{display:flex;align-items:center;background:var(--blue);border-bottom:2px solid var(--accent);padding:0 1.25rem;height:48px}
+.nav-logo{font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-right:10px;display:flex;align-items:center;gap:7px;color:#fff}
+.nav-logo span{color:var(--accent)}
+.nav-admin{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 8px;border-radius:var(--radius)}
+#nav-tabs{display:flex;align-items:center;height:48px;margin-left:14px}
+.nav-tab{display:flex;align-items:center;gap:6px;padding:0 14px;height:48px;font-size:12px;font-weight:500;color:#CBD7E6;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;opacity:.6}
+.nav-tab:hover{opacity:.9}
+.nav-tab.active{color:#fff;border-bottom-color:var(--accent);font-weight:700;opacity:1}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.nav-logout{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:5px 12px;border-radius:var(--radius);border:1px solid rgba(255,255,255,.28);background:transparent;color:#CBD7E6;cursor:pointer}
+.nav-logout:hover{border-color:var(--accent);color:#fff;background:var(--accent)}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 48px);padding:2rem}
+.login-card{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:380px}
+.login-title{font-size:18px;font-weight:800;margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:1.5rem}
+.gate-input{width:100%;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);outline:none;margin-bottom:10px;font-family:inherit}
+.gate-input:focus{border-color:var(--blue)}
+.admin-body{padding:1.5rem;max-width:960px;margin:0 auto}
+.admin-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.25rem}
+.admin-card-title{font-size:14px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.admin-card-sub{font-size:12px;color:var(--text3);margin-bottom:1rem;line-height:1.5}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.field-grid.full{grid-template-columns:1fr}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;font-weight:500;color:var(--text2)}
+.field input,.field select,.field textarea{font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none;font-family:inherit}
+.field input:focus{border-color:var(--blue)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;user-select:none;font-weight:500}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 6px}
+.hint{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4}
+.inline-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;font-weight:500;font-family:inherit}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover{background:var(--blue-dark)}
+.btn.danger{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+.btn.sm{font-size:11px;padding:5px 10px}
+.btn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.alert{padding:10px 14px;border-radius:var(--radius);font-size:13px;margin-top:10px;line-height:1.5}
+.alert.success{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green)}
+.alert.error{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
+.alert.info{background:var(--blue-bg);border:1px solid var(--blue);color:var(--blue-dark)}
+.acc-card{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:10px}
+.acc-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg);cursor:pointer;flex-wrap:wrap}
+.acc-hdr:hover{background:#EFEDE7}
+.acc-name{font-size:13px;font-weight:700}
+.acc-user{font-size:11px;color:var(--text3);font-family:monospace}
+.acc-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--radius);text-transform:uppercase;letter-spacing:.03em}
+.acc-badge.ok{background:var(--green-bg);color:var(--green)}
+.acc-badge.off{background:#EEE;color:var(--text3)}
+.acc-badge.exp{background:var(--red-bg);color:var(--red)}
+.acc-badge.warn{background:var(--yellow-bg);color:var(--yellow)}
+.acc-meta{margin-left:auto;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:12px}
+.acc-body{padding:14px;border-top:1px solid var(--border);display:none}
+.acc-body.open{display:block}
+.pw-box{display:flex;align-items:center;gap:8px;background:var(--yellow-bg);border:1px solid #E8D5AE;border-radius:var(--radius);padding:10px 12px;margin-top:10px;font-size:13px}
+.pw-box code{font-family:monospace;font-weight:700;font-size:14px;color:var(--text)}
+.sync-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);font-size:12px;margin-bottom:6px}
+.sync-date{font-weight:600;min-width:90px}
+.sync-n{color:var(--text2)}
+.sync-st{margin-left:auto;font-size:11px;font-weight:600}
+.sync-st.ok{color:var(--green)}
+.sync-st.err{color:var(--red)}
+.empty{text-align:center;padding:2rem;color:var(--text3);font-size:13px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.overlay-box{background:var(--surface);border-radius:var(--radius-lg);padding:2rem;text-align:center;max-width:320px}
+.spin{font-size:36px;color:var(--blue);display:block;margin-bottom:12px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer;user-select:none}
+.toggle input{display:none}
+.tswitch{width:34px;height:18px;border-radius:20px;background:var(--border);position:relative;transition:background .15s;flex-shrink:0}
+.tswitch::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.toggle input:checked + .tswitch{background:var(--green-border)}
+.toggle input:checked + .tswitch::after{transform:translateX(16px)}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay">
+  <div class="overlay-box"><i class="ti ti-loader-2 spin"></i><p id="overlay-msg">Cargando...</p></div>
+</div>
+<nav class="nav">
+  <div class="nav-logo"><i class="ti ti-news" style="color:var(--accent)"></i> Daily Legal <span>Snippet</span></div>
+  <span class="nav-admin">Admin</span>
+  <div id="nav-tabs"></div>
+  <div class="nav-right" id="nav-right"></div>
+</nav>
+<div id="app"></div>
+<script>
+/* ============================================================
+   CONFIGURACION
+   ============================================================ */
+// >>> Proyecto Supabase del Daily Legal Snippet (el NUEVO, no el interno).
+var SB_URL  = 'PEGAR_URL_SUPABASE';
+var SB_ANON = 'PEGAR_ANON_KEY';
+
+// Base INTERNA del Smart Snippet (solo se usa para el sync, solo tabla `projects`).
+// La URL es pública; la CLAVE no se guarda en este archivo a propósito: se pega una
+// vez en la pestaña Sincronizar y queda en el navegador del admin (localStorage).
+var INTERNAL_SB_URL = 'https://xyqmtqsczscdejcwusce.supabase.co';
+
+// Cuántos días hacia atrás se publican a prospectos.
+var SYNC_DAYS = 30;
+
+/* ============================================================
+   CONSTANTES (deben coincidir con la app interna)
+   ============================================================ */
+var SECTORES = ['Coyuntura general','Consumo masivo','Medios de pago','Tecnologia','Automotriz','Agroindustria','Petroquimicos','Mineria','Turismo','Salud','Ambiente'];
+var PROVINCIAS = ['CABA','Buenos Aires','Catamarca','Chaco','Chubut','Cordoba','Corrientes','Entre Rios','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquen','Rio Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucuman'];
+var JUR_ORDER = ['Nacional'].concat(PROVINCIAS).concat(['Municipal']);
+var SECTOR_OTRO = 'Otros', JUR_OTRA = 'Otras';
+var SECTOR_PICK = SECTORES.concat([SECTOR_OTRO]);
+var JUR_PICK = JUR_ORDER.concat([JUR_OTRA]);
+
+// Campos que se publican de cada proyecto (whitelist: cualquier otro campo se descarta).
+var PROJ_FIELDS = ['id','num','sector','jur','tema','org','autor','title','resumen','linkExpediente','linkTexto','fecha'];
+
+var ADMIN_PASS = null, OV = {accounts: [], dates: []}, tab = 'cuentas', openAcc = {};
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+function esc(s) { return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function norm(s) { return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
+function isoToday() { var d=new Date(),p=function(n){return (n<10?'0':'')+n;}; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function isoPlusDays(n) { var d=new Date(); d.setDate(d.getDate()+n); var p=function(x){return (x<10?'0':'')+x;}; return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function isoToDisplay(iso) { if(!iso)return ''; var p=String(iso).split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function showOverlay(msg) { document.getElementById('overlay').classList.add('show'); document.getElementById('overlay-msg').textContent = msg||'Cargando...'; }
+function hideOverlay() { document.getElementById('overlay').classList.remove('show'); }
+function canonSector(s) { var n=norm(s); for(var i=0;i<SECTORES.length;i++) if(norm(SECTORES[i])===n) return SECTORES[i]; return SECTOR_OTRO; }
+function canonJur(j) { var n=norm(j); for(var i=0;i<JUR_ORDER.length;i++) if(norm(JUR_ORDER[i])===n) return JUR_ORDER[i]; return JUR_OTRA; }
+function agoLabel(ts) {
+  if (!ts) return 'nunca';
+  var diff = Math.floor((Date.now() - new Date(ts).getTime())/86400000);
+  return diff<=0 ? 'hoy' : diff===1 ? 'ayer' : 'hace '+diff+' días';
+}
+// Contraseña legible: quipu-XXXX-XXXX (sin caracteres ambiguos).
+function genPassword() {
+  var chars = 'abcdefghjkmnpqrstuvwxyz23456789', out = 'quipu';
+  for (var g=0; g<2; g++) { out += '-'; for (var i=0;i<4;i++) out += chars[Math.floor(Math.random()*chars.length)]; }
+  return out;
+}
+
+/* ============================================================
+   CAPA SUPABASE (RPC — la clave anon no lee tablas directo)
+   ============================================================ */
+async function rpc(fn, args) {
+  var r = await fetch(SB_URL + '/rest/v1/rpc/' + fn, {
+    method: 'POST',
+    headers: {'apikey': SB_ANON, 'Authorization': 'Bearer ' + SB_ANON, 'Content-Type': 'application/json'},
+    body: JSON.stringify(args || {})
+  });
+  var t = await r.text();
+  if (!r.ok) throw new Error('DB ' + r.status + (t ? ': ' + t.slice(0, 120) : ''));
+  return t ? JSON.parse(t) : null;
+}
+function adminRpc(fn, args) { args = args||{}; args.p_admin = ADMIN_PASS; return rpc(fn, args); }
+
+/* ============================================================
+   GATE
+   ============================================================ */
+function renderGate(msg) {
+  document.getElementById('nav-tabs').innerHTML=''; document.getElementById('nav-right').innerHTML='';
+  var h = '<div class="login-wrap"><div class="login-card">';
+  h += '<div class="login-title">Administración</div>';
+  h += '<div class="login-sub">Cuentas de prospectos y sincronización del Daily Legal Snippet.</div>';
+  if (msg) h += '<div class="alert error" style="margin:0 0 10px">'+esc(msg)+'</div>';
+  h += '<input type="password" class="gate-input" id="gate-pass" placeholder="Contraseña de administración" onkeydown="if(event.key===\'Enter\')doGate()">';
+  h += '<button class="btn primary" style="width:100%;justify-content:center" onclick="doGate()"><i class="ti ti-lock-open"></i> Entrar</button>';
+  h += '</div></div>';
+  document.getElementById('app').innerHTML = h;
+  document.getElementById('gate-pass').focus();
+}
+async function doGate() {
+  var p = document.getElementById('gate-pass').value||'';
+  if (!p) return;
+  showOverlay('Verificando...');
+  var ok = false;
+  try { ok = await rpc('admin_check', {p_admin: p}); } catch(e) {}
+  hideOverlay();
+  if (!ok) { renderGate('Contraseña incorrecta.'); return; }
+  ADMIN_PASS = p;
+  try { sessionStorage.setItem('dls_admin', p); } catch(e) {}
+  await loadOverview(); buildNav(); render();
+}
+function adminLogout() { ADMIN_PASS=null; try{sessionStorage.removeItem('dls_admin');}catch(e){} renderGate(); }
+
+async function loadOverview() {
+  showOverlay('Cargando...');
+  try { OV = await adminRpc('admin_overview'); } catch(e) { OV = {accounts:[],dates:[]}; }
+  hideOverlay();
+}
+
+function buildNav() {
+  var tabs = [['cuentas','ti-users','Cuentas'],['sync','ti-refresh','Sincronizar']];
+  document.getElementById('nav-tabs').innerHTML = tabs.map(function(t){
+    return '<div class="nav-tab'+(tab===t[0]?' active':'')+'" onclick="switchTab(\''+t[0]+'\')"><i class="ti '+t[1]+'"></i> '+t[2]+'</div>';
+  }).join('');
+  document.getElementById('nav-right').innerHTML = '<a href="index.html" target="_blank" style="font-size:11px;color:#A8BCD4;text-decoration:none"><i class="ti ti-external-link"></i> Ver app de prospectos</a><button class="nav-logout" onclick="adminLogout()">Salir</button>';
+}
+function switchTab(t) { tab = t; buildNav(); render(); }
+function render() { if (tab==='cuentas') renderCuentas(); else renderSync(); }
+
+/* ============================================================
+   CHIPS de sectores / jurisdicciones (para alta y edición)
+   ============================================================ */
+function chipsHTML(prefix, values, selected) {
+  // selected = [] significa "todos" → ningún chip marcado + toggle "acceso completo" aparte.
+  return values.map(function(v){
+    var on = selected.indexOf(v) >= 0;
+    return '<span class="chip'+(on?' on':'')+'" data-v="'+esc(v)+'" onclick="this.classList.toggle(\'on\')">'+esc(v)+'</span>';
+  }).join('');
+}
+function chipsSelected(containerId) {
+  return Array.from(document.querySelectorAll('#'+containerId+' .chip.on')).map(function(c){ return c.getAttribute('data-v'); });
+}
+function filterPickerHTML(idBase, sectors, jurs) {
+  var allS = !sectors.length, allJ = !jurs.length;
+  var h = '<div class="chip-label">Sectores <span style="font-weight:400;text-transform:none;letter-spacing:0">(ninguno marcado = ve todos)</span></div>';
+  h += '<div class="chips" id="'+idBase+'-sec">'+chipsHTML(idBase+'-sec', SECTOR_PICK, allS?[]:sectors)+'</div>';
+  h += '<div class="chip-label">Jurisdicciones <span style="font-weight:400;text-transform:none;letter-spacing:0">(ninguna marcada = ve todas)</span></div>';
+  h += '<div class="chips" id="'+idBase+'-jur">'+chipsHTML(idBase+'-jur', JUR_PICK, allJ?[]:jurs)+'</div>';
+  return h;
+}
+
+/* ============================================================
+   PESTAÑA CUENTAS
+   ============================================================ */
+function accStatus(a) {
+  if (!a.is_active) return ['off','Desactivada'];
+  if (a.expires_at && a.expires_at < isoToday()) return ['exp','Vencida'];
+  if (a.expires_at) {
+    var d = Math.round((new Date(a.expires_at) - new Date(isoToday()))/86400000);
+    if (d <= 7) return ['warn','Vence en '+d+' día'+(d!==1?'s':'')];
+  }
+  return ['ok','Activa'];
+}
+
+function renderCuentas() {
+  var h = '<div class="admin-body">';
+
+  // --- Alta ---
+  h += '<div class="admin-card">';
+  h += '<div class="admin-card-title"><i class="ti ti-user-plus"></i> Nueva cuenta de prospecto</div>';
+  h += '<div class="admin-card-sub">Crea el acceso y definí qué sectores y jurisdicciones va a ver. La contraseña no se puede recuperar después: copiala y compartila al crearla.</div>';
+  h += '<div class="field-grid">';
+  h += '<div class="field"><label>Usuario (para el login)</label><input type="text" id="new-user" placeholder="ej: acme"></div>';
+  h += '<div class="field"><label>Empresa / contacto (se muestra en la app)</label><input type="text" id="new-display" placeholder="ej: ACME S.A."></div>';
+  h += '</div>';
+  h += '<div class="field-grid">';
+  h += '<div class="field"><label>Contraseña</label><div class="inline-row"><input type="text" id="new-pass" style="flex:1;font-family:monospace" value="'+genPassword()+'"><button class="btn sm" onclick="document.getElementById(\'new-pass\').value=genPassword()"><i class="ti ti-refresh"></i></button></div></div>';
+  h += '<div class="field"><label>Vencimiento del acceso</label><div class="inline-row"><input type="date" id="new-exp" value="'+isoPlusDays(30)+'" min="'+isoToday()+'"><label class="toggle"><input type="checkbox" id="new-noexp" onchange="document.getElementById(\'new-exp\').disabled=this.checked"><span class="tswitch"></span><span>Sin vencimiento</span></label></div></div>';
+  h += '</div>';
+  h += filterPickerHTML('new', [], []);
+  h += '<div class="field" style="margin-top:10px"><label>Notas internas (no las ve el prospecto)</label><input type="text" id="new-notes" placeholder="ej: contacto de María, interesado en litio"></div>';
+  h += '<div class="btn-row"><button class="btn primary" onclick="createAccount()"><i class="ti ti-plus"></i> Crear cuenta</button></div>';
+  h += '<div id="create-msg"></div>';
+  h += '</div>';
+
+  // --- Listado ---
+  h += '<div class="admin-card">';
+  h += '<div class="admin-card-title"><i class="ti ti-users"></i> Cuentas <span style="background:var(--blue-bg);color:var(--blue-dark);font-size:12px;padding:2px 10px;border-radius:var(--radius);font-weight:500;margin-left:4px">'+OV.accounts.length+'</span></div>';
+  h += '<div class="admin-card-sub">Click en una cuenta para editarla. "Último ingreso" te dice qué prospecto está enganchado.</div>';
+  if (!OV.accounts.length) h += '<div class="empty"><i class="ti ti-user-off" style="font-size:28px;display:block;margin:0 auto 10px"></i>Todavía no hay cuentas creadas.</div>';
+  OV.accounts.forEach(function(a){ h += accCardHTML(a); });
+  h += '</div>';
+
+  h += '</div>';
+  document.getElementById('app').innerHTML = h;
+}
+
+function accCardHTML(a) {
+  var st = accStatus(a);
+  var open = !!openAcc[a.id];
+  var h = '<div class="acc-card">';
+  h += '<div class="acc-hdr" onclick="toggleAcc('+a.id+')">';
+  h += '<i class="ti ti-chevron-'+(open?'down':'right')+'" style="color:var(--text3)"></i>';
+  h += '<span class="acc-name">'+esc(a.display_name||a.username)+'</span>';
+  h += '<span class="acc-user">'+esc(a.username)+'</span>';
+  h += '<span class="acc-badge '+st[0]+'">'+st[1]+'</span>';
+  h += '<span class="acc-meta">';
+  h += '<span title="Último ingreso"><i class="ti ti-login-2" style="font-size:12px"></i> '+agoLabel(a.last_login)+' ('+(a.login_count||0)+')</span>';
+  h += '<span>'+(a.expires_at ? 'hasta '+isoToDisplay(a.expires_at) : 'sin vencimiento')+'</span>';
+  h += '</span></div>';
+  if (open) {
+    var s = a.sectors||[], j = a.jurs||[];
+    h += '<div class="acc-body open">';
+    h += '<div class="field-grid">';
+    h += '<div class="field"><label>Empresa / contacto</label><input type="text" id="ed-display-'+a.id+'" value="'+esc(a.display_name||'')+'"></div>';
+    h += '<div class="field"><label>Vencimiento</label><div class="inline-row"><input type="date" id="ed-exp-'+a.id+'" value="'+esc(a.expires_at||'')+'" '+(a.expires_at?'':'disabled')+'><label class="toggle"><input type="checkbox" id="ed-noexp-'+a.id+'" '+(a.expires_at?'':'checked')+' onchange="var e=document.getElementById(\'ed-exp-'+a.id+'\');e.disabled=this.checked;if(!this.checked&&!e.value)e.value=\''+isoPlusDays(30)+'\'"><span class="tswitch"></span><span>Sin vencimiento</span></label></div></div>';
+    h += '</div>';
+    h += filterPickerHTML('ed'+a.id, s, j);
+    h += '<div class="field" style="margin-top:10px"><label>Notas internas</label><input type="text" id="ed-notes-'+a.id+'" value="'+esc(a.notes||'')+'"></div>';
+    h += '<div class="inline-row" style="margin-top:12px"><label class="toggle"><input type="checkbox" id="ed-active-'+a.id+'" '+(a.is_active?'checked':'')+'><span class="tswitch"></span><span>Cuenta activa</span></label></div>';
+    h += '<div class="btn-row">';
+    h += '<button class="btn primary" onclick="saveAccount('+a.id+')"><i class="ti ti-device-floppy"></i> Guardar cambios</button>';
+    h += '<button class="btn" onclick="resetPassword('+a.id+')"><i class="ti ti-key"></i> Resetear contraseña</button>';
+    h += '<button class="btn danger" onclick="deleteAccount('+a.id+',\''+esc(a.username).replace(/'/g,"\\'")+'\')"><i class="ti ti-trash"></i> Eliminar</button>';
+    h += '</div>';
+    h += '<div id="acc-msg-'+a.id+'"></div>';
+    h += '</div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+function toggleAcc(id) { if(openAcc[id]) delete openAcc[id]; else openAcc[id]=true; renderCuentas(); }
+function msgIn(elId, cls, txt) { var el=document.getElementById(elId); if(el) el.innerHTML='<div class="alert '+cls+'">'+txt+'</div>'; }
+
+async function createAccount() {
+  var user = (document.getElementById('new-user').value||'').trim();
+  var pass = (document.getElementById('new-pass').value||'').trim();
+  var display = (document.getElementById('new-display').value||'').trim();
+  var noexp = document.getElementById('new-noexp').checked;
+  var exp = noexp ? null : (document.getElementById('new-exp').value||null);
+  var sectors = chipsSelected('new-sec'), jurs = chipsSelected('new-jur');
+  if (!user) { msgIn('create-msg','error','Falta el usuario.'); return; }
+  showOverlay('Creando cuenta...');
+  var res;
+  try { res = await adminRpc('admin_create_account', {p_username:user, p_pass:pass, p_display:display, p_sectors:sectors, p_jurs:jurs, p_expires:exp, p_notes:(document.getElementById('new-notes').value||'').trim()}); }
+  catch(e) { hideOverlay(); msgIn('create-msg','error','Error: '+esc(e.message)); return; }
+  hideOverlay();
+  if (!res.ok) { msgIn('create-msg','error',esc(res.error||'No se pudo crear.')); return; }
+  await loadOverview(); renderCuentas();
+  msgIn('create-msg','success','Cuenta <b>'+esc(user)+'</b> creada. Compartile estas credenciales al prospecto (la contraseña no se vuelve a mostrar):<div class="pw-box"><i class="ti ti-key"></i><span>Usuario: <code>'+esc(user)+'</code> — Contraseña: <code>'+esc(pass)+'</code></span></div>');
+}
+
+async function saveAccount(id) {
+  var noexp = document.getElementById('ed-noexp-'+id).checked;
+  var exp = noexp ? null : (document.getElementById('ed-exp-'+id).value||null);
+  showOverlay('Guardando...');
+  var res;
+  try {
+    res = await adminRpc('admin_update_account', {
+      p_id: id,
+      p_display: (document.getElementById('ed-display-'+id).value||'').trim(),
+      p_sectors: chipsSelected('ed'+id+'-sec'),
+      p_jurs: chipsSelected('ed'+id+'-jur'),
+      p_expires: exp,
+      p_active: document.getElementById('ed-active-'+id).checked,
+      p_notes: (document.getElementById('ed-notes-'+id).value||'').trim()
+    });
+  } catch(e) { hideOverlay(); msgIn('acc-msg-'+id,'error','Error: '+esc(e.message)); return; }
+  hideOverlay();
+  if (!res.ok) { msgIn('acc-msg-'+id,'error',esc(res.error||'No se pudo guardar.')); return; }
+  await loadOverview(); renderCuentas();
+}
+
+async function resetPassword(id) {
+  var np = genPassword();
+  if (!confirm('¿Resetear la contraseña de esta cuenta? La actual deja de funcionar.')) return;
+  showOverlay('Reseteando...');
+  var res;
+  try { res = await adminRpc('admin_reset_password', {p_id:id, p_new_pass:np}); }
+  catch(e) { hideOverlay(); msgIn('acc-msg-'+id,'error','Error: '+esc(e.message)); return; }
+  hideOverlay();
+  if (!res.ok) { msgIn('acc-msg-'+id,'error',esc(res.error||'No se pudo resetear.')); return; }
+  msgIn('acc-msg-'+id,'success','Nueva contraseña (compartila ahora, no se vuelve a mostrar):<div class="pw-box"><i class="ti ti-key"></i><code>'+esc(np)+'</code></div>');
+}
+
+async function deleteAccount(id, user) {
+  if (!confirm('¿Eliminar la cuenta "'+user+'"? Esta acción no se puede deshacer.')) return;
+  showOverlay('Eliminando...');
+  try { await adminRpc('admin_delete_account', {p_id:id}); } catch(e) {}
+  hideOverlay();
+  delete openAcc[id];
+  await loadOverview(); renderCuentas();
+}
+
+/* ============================================================
+   PESTAÑA SINCRONIZAR
+   ============================================================ */
+function internalKey() { try { return localStorage.getItem('dls_internal_key')||''; } catch(e){ return ''; } }
+function setInternalKey(k) { try { localStorage.setItem('dls_internal_key', k); } catch(e){} }
+
+function renderSync() {
+  var hasKey = !!internalKey();
+  var h = '<div class="admin-body">';
+  h += '<div class="admin-card">';
+  h += '<div class="admin-card-title"><i class="ti ti-refresh"></i> Sincronizar proyectos</div>';
+  h += '<div class="admin-card-sub">Copia los proyectos de ley de los últimos '+SYNC_DAYS+' días desde el Smart Snippet interno a la base de prospectos. Solo se copian los proyectos (título, resumen, links) — <b>nunca</b> las calificaciones de impacto ni datos de clientes. Corré esto después de cargar el snippet del día.</div>';
+  if (!hasKey) {
+    h += '<div class="alert info" style="margin:0 0 12px">Primera vez en este navegador: pegá la clave pública (anon) de la base <b>interna</b> del Smart Snippet. Queda guardada solo en este navegador.</div>';
+    h += '<div class="field" style="margin-bottom:10px"><label>Clave anon de la base interna</label><input type="text" id="int-key" style="font-family:monospace" placeholder="sb_publishable_..."></div>';
+    h += '<div class="btn-row"><button class="btn primary" onclick="saveInternalKey()"><i class="ti ti-device-floppy"></i> Guardar clave</button></div>';
+  } else {
+    h += '<div class="btn-row" style="margin-top:0"><button class="btn primary" onclick="doSync()"><i class="ti ti-refresh"></i> Sincronizar últimos '+SYNC_DAYS+' días</button>';
+    h += '<button class="btn sm" onclick="if(confirm(\'¿Borrar la clave interna guardada en este navegador?\')){localStorage.removeItem(\'dls_internal_key\');renderSync();}"><i class="ti ti-key-off"></i> Cambiar clave interna</button></div>';
+  }
+  h += '<div id="sync-msg"></div>';
+  h += '<div id="sync-log" style="margin-top:12px"></div>';
+  h += '</div>';
+
+  // Estado actual de la base de prospectos
+  h += '<div class="admin-card">';
+  h += '<div class="admin-card-title"><i class="ti ti-database"></i> Publicado actualmente</div>';
+  h += '<div class="admin-card-sub">Días visibles para los prospectos (la app les muestra hasta '+SYNC_DAYS+' días hacia atrás).</div>';
+  if (!OV.dates.length) h += '<div class="empty">Nada publicado todavía. Corré la primera sincronización.</div>';
+  OV.dates.forEach(function(d){
+    h += '<div class="sync-row"><span class="sync-date">'+esc(isoToDisplay(d.date))+'</span><span class="sync-n">'+d.count+' proyecto'+(d.count!==1?'s':'')+'</span><span class="sync-st ok">sincronizado '+esc(agoLabel(d.synced_at))+'</span></div>';
+  });
+  h += '</div>';
+
+  h += '</div>';
+  document.getElementById('app').innerHTML = h;
+}
+
+function saveInternalKey() {
+  var k = (document.getElementById('int-key').value||'').trim();
+  if (!k) return;
+  setInternalKey(k); renderSync();
+}
+
+// Limpia un proyecto para publicar: whitelist de campos + sector/jur canónicos.
+function sanitizeProject(p) {
+  var out = {};
+  PROJ_FIELDS.forEach(function(f){ if (p[f] != null) out[f] = p[f]; });
+  out.sector = canonSector(out.sector);
+  out.jur = canonJur(out.jur);
+  return out;
+}
+
+async function doSync() {
+  var key = internalKey();
+  var cutoff = isoPlusDays(-SYNC_DAYS);
+  msgIn('sync-msg','info','Leyendo la base interna...');
+  document.getElementById('sync-log').innerHTML = '';
+  var rows;
+  try {
+    var r = await fetch(INTERNAL_SB_URL + '/rest/v1/projects?select=date,data&date=gte.' + cutoff + '&order=date.desc', {
+      headers: {'apikey': key, 'Authorization': 'Bearer ' + key}
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status + (r.status===401||r.status===403 ? ' — ¿clave interna incorrecta?' : ''));
+    rows = await r.json();
+  } catch(e) { msgIn('sync-msg','error','No se pudo leer la base interna: '+esc(e.message)); return; }
+  if (!rows.length) { msgIn('sync-msg','info','La base interna no tiene proyectos en los últimos '+SYNC_DAYS+' días.'); return; }
+
+  var log = document.getElementById('sync-log'), ok = 0, fail = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var clean = (row.data||[]).map(sanitizeProject);
+    var stHtml;
+    try {
+      await adminRpc('admin_sync_projects', {p_date: row.date, p_data: clean});
+      ok++; stHtml = '<span class="sync-st ok"><i class="ti ti-check"></i> publicado</span>';
+    } catch(e) {
+      fail++; stHtml = '<span class="sync-st err"><i class="ti ti-x"></i> error</span>';
+    }
+    log.innerHTML += '<div class="sync-row"><span class="sync-date">'+esc(isoToDisplay(row.date))+'</span><span class="sync-n">'+clean.length+' proyecto'+(clean.length!==1?'s':'')+'</span>'+stHtml+'</div>';
+  }
+  msgIn('sync-msg', fail? 'error':'success', fail
+    ? 'Sincronización con errores: '+ok+' día(s) publicados, '+fail+' fallaron. Reintentá.'
+    : 'Listo: '+ok+' día(s) publicados a la base de prospectos.');
+  await loadOverview();
+  // refresco solo el panel "publicado actualmente" sin pisar el log
+  renderSyncStatusOnly();
+}
+function renderSyncStatusOnly() { /* re-render completo mantiene el log simple: no hacer nada */ }
+
+/* ============================================================
+   ARRANQUE
+   ============================================================ */
+(async function init() {
+  if (SB_URL.indexOf('PEGAR') === 0) {
+    document.getElementById('app').innerHTML = '<div class="empty" style="padding:4rem"><i class="ti ti-settings" style="font-size:28px;display:block;margin:0 auto 10px"></i>Configuración pendiente: falta pegar la URL y la clave del proyecto Supabase en admin.html.</div>';
+    return;
+  }
+  var saved = null; try { saved = sessionStorage.getItem('dls_admin'); } catch(e) {}
+  if (saved) {
+    var ok = false;
+    try { ok = await rpc('admin_check', {p_admin: saved}); } catch(e) {}
+    if (ok) { ADMIN_PASS = saved; await loadOverview(); buildNav(); render(); return; }
+  }
+  renderGate();
+})();
+</script>
+</body>
+</html>
