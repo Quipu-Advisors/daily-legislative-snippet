@@ -300,7 +300,10 @@ function accCardHTML(a) {
     var s = a.sectors||[], j = a.jurs||[];
     h += '<div class="acc-body open">';
     h += '<div class="field-grid">';
+    h += '<div class="field"><label>Usuario (para el login)</label><input type="text" value="'+esc(a.username)+'" disabled style="font-family:monospace;background:var(--bg);color:var(--text)"></div>';
     h += '<div class="field"><label>Empresa / contacto</label><input type="text" id="ed-display-'+a.id+'" value="'+esc(a.display_name||'')+'"></div>';
+    h += '</div>';
+    h += '<div class="field-grid">';
     h += '<div class="field"><label>Vencimiento</label><div class="inline-row"><input type="date" id="ed-exp-'+a.id+'" value="'+esc(a.expires_at||'')+'" '+(a.expires_at?'':'disabled')+'><label class="toggle"><input type="checkbox" id="ed-noexp-'+a.id+'" '+(a.expires_at?'':'checked')+' onchange="var e=document.getElementById(\'ed-exp-'+a.id+'\');e.disabled=this.checked;if(!this.checked&&!e.value)e.value=\''+isoPlusDays(30)+'\'"><span class="tswitch"></span><span>Sin vencimiento</span></label></div></div>';
     h += '</div>';
     h += filterPickerHTML('ed'+a.id, s, j);
