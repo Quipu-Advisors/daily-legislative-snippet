@@ -62,8 +62,10 @@ revoke all on projects_public, prospect_accounts, admin_settings from anon, auth
 -- ============================================================
 
 -- >>> CAMBIAR 'CAMBIAME_ADMIN' por la contraseña real del módulo admin <<<
+-- Nota: crypt/gen_salt de pgcrypto viven en el schema `extensions` en Supabase,
+-- no en `public` — por eso se llaman siempre calificados (extensions.crypt).
 insert into admin_settings (id, admin_hash)
-values (1, crypt('CAMBIAME_ADMIN', gen_salt('bf')))
+values (1, extensions.crypt('CAMBIAME_ADMIN', extensions.gen_salt('bf')))
 on conflict (id) do update set admin_hash = excluded.admin_hash;
 
 -- (Para cambiarla más adelante, volver a correr solo este INSERT con la nueva clave.)
@@ -78,7 +80,7 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   if not exists (
     select 1 from admin_settings
-    where id = 1 and admin_hash = crypt(coalesce(p_admin,''), admin_hash)
+    where id = 1 and admin_hash = extensions.crypt(coalesce(p_admin,''), admin_hash)
   ) then
     raise exception 'admin_unauthorized';
   end if;
@@ -92,7 +94,7 @@ declare acc prospect_accounts;
 begin
   select * into acc from prospect_accounts
   where lower(username) = lower(trim(coalesce(p_user,'')));
-  if acc.id is null or acc.pass_hash <> crypt(coalesce(p_pass,''), acc.pass_hash) then
+  if acc.id is null or acc.pass_hash <> extensions.crypt(coalesce(p_pass,''), acc.pass_hash) then
     return null;
   end if;
   return acc;
@@ -213,7 +215,7 @@ begin
     return jsonb_build_object('ok', false, 'error', 'Ese usuario ya existe');
   end if;
   insert into prospect_accounts (username, pass_hash, display_name, sectors, jurs, expires_at, notes)
-  values (lower(trim(p_username)), crypt(p_pass, gen_salt('bf')), coalesce(p_display,''),
+  values (lower(trim(p_username)), extensions.crypt(p_pass, extensions.gen_salt('bf')), coalesce(p_display,''),
           coalesce(p_sectors,'[]'::jsonb), coalesce(p_jurs,'[]'::jsonb), p_expires, coalesce(p_notes,''))
   returning id into new_id;
   return jsonb_build_object('ok', true, 'id', new_id);
@@ -246,7 +248,7 @@ begin
   if length(coalesce(p_new_pass,'')) < 8 then
     return jsonb_build_object('ok', false, 'error', 'La contraseña debe tener al menos 8 caracteres');
   end if;
-  update prospect_accounts set pass_hash = crypt(p_new_pass, gen_salt('bf')) where id = p_id;
+  update prospect_accounts set pass_hash = extensions.crypt(p_new_pass, extensions.gen_salt('bf')) where id = p_id;
   if not found then return jsonb_build_object('ok', false, 'error', 'Cuenta no encontrada'); end if;
   return jsonb_build_object('ok', true);
 end $$;
