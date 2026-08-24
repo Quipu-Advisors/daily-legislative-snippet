@@ -13,8 +13,14 @@ desde un módulo admin, y vencimiento de acceso configurable a **cualquier fecha
 
 ## Estado actual (actualizado 2026-08-24) — leer esto primero
 
-**El código está 100% completo y no tiene bugs conocidos.** Lo único que falta es la parte de
-"clickear cosas en Supabase y Vercel" — nadie la hizo todavía. Verificado hoy:
+**Deploy completo y funcionando end-to-end**, salvo dominio propio (cosmético, no bloquea).
+Verificado hoy en producción (`daily-legislative-snippet.vercel.app`): login de prospecto y de
+admin cargan bien contra el Supabase real, `/api/sync` responde (probado sin credenciales reales,
+devolvió 401 como corresponde — confirma que las env vars de Vercel están bien cargadas). Falta
+que alguien entre a `admin.html` con la contraseña real y cree la primera cuenta de prueba, y
+correr una sincronización real para ver datos de verdad en `index.html`.
+
+Resto del historial de la puesta en marcha, por si hace falta retomar algo puntual:
 
 - ✅ Repo renombrado de `daily-legal-snippet` a `daily-legislative-snippet` (2026-08-24, para no
   confundirlo con el correo interno homónimo) y transferido a la organización de GitHub de Quipu:
