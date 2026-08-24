@@ -420,10 +420,20 @@ function toggleCard(id,e) { id=String(id); if(e.target.tagName==='A')return; if(
     document.getElementById('app').innerHTML = '<div class="empty" style="padding:4rem"><i class="ti ti-settings" style="font-size:28px;display:block;margin:0 auto 10px"></i>Configuración pendiente: falta pegar la URL y la clave del proyecto Supabase en index.html.</div>';
     return;
   }
-  // Modo vista previa (usado desde admin.html): ?preview=<contraseña admin>
-  // Muestra todo sin filtrar, con la misma app y el mismo render que ve un prospecto real.
-  var previewPass = new URLSearchParams(location.search).get('preview');
-  if (previewPass) { await enterPreview(previewPass); return; }
+  // Modo vista previa (abierto desde el botón de admin.html): ?preview=1 es solo una
+  // bandera, NUNCA lleva la contraseña. La contraseña viaja por sessionStorage entre
+  // pestañas del mismo origen (nunca queda en la URL, el historial, ni al pasar el
+  // mouse por un link) y se borra apenas se lee, para que sea de un solo uso.
+  if (new URLSearchParams(location.search).get('preview')) {
+    var previewPass = null;
+    try { previewPass = sessionStorage.getItem('dls_preview_pass'); sessionStorage.removeItem('dls_preview_pass'); } catch(e) {}
+    if (!previewPass) {
+      document.getElementById('app').innerHTML = '<div class="empty" style="padding:4rem">Este link de vista previa ya se usó o no es válido. Abrila de nuevo desde el botón en <code>admin.html</code>.</div>';
+      return;
+    }
+    await enterPreview(previewPass);
+    return;
+  }
   var a = savedAuth();
   if (!a) { renderLogin(); return; }
   showOverlay('Ingresando...');

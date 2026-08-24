@@ -410,12 +410,20 @@ async function deleteAccount(id, user) {
 /* ============================================================
    PESTAÑA VISTA PREVIA (todos los sectores/jurisdicciones)
    ============================================================ */
+function openPreview() {
+  // La contraseña nunca va en la URL (queda en historial, se ve al pasar el mouse,
+  // se puede copiar el link). Se manda por sessionStorage entre pestañas del mismo
+  // origen y se borra apenas index.html la lee, una sola vez.
+  try { sessionStorage.setItem('dls_preview_pass', ADMIN_PASS); } catch(e) {}
+  window.open('index.html?preview=1', '_blank');
+}
+
 function renderPreview() {
   var h = '<div class="admin-body">';
   h += '<div class="admin-card">';
   h += '<div class="admin-card-title"><i class="ti ti-eye"></i> Vista previa</div>';
   h += '<div class="admin-card-sub">Abre la app real del prospecto, sin login, mostrando todo sin filtrar por sector ni jurisdicción — exactamente lo mismo que ve un prospecto con acceso a todo (mismo diseño, mismos filtros, misma búsqueda). Se abre en una pestaña nueva.</div>';
-  h += '<div class="btn-row" style="margin-top:0"><a class="btn primary" href="index.html?preview='+encodeURIComponent(ADMIN_PASS)+'" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> Abrir vista previa</a></div>';
+  h += '<div class="btn-row" style="margin-top:0"><button class="btn primary" onclick="openPreview()"><i class="ti ti-external-link"></i> Abrir vista previa</button></div>';
   h += '</div></div>';
   document.getElementById('app').innerHTML = h;
 }
