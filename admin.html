@@ -311,6 +311,7 @@ function accCardHTML(a) {
     h += '<div class="inline-row" style="margin-top:12px"><label class="toggle"><input type="checkbox" id="ed-active-'+a.id+'" '+(a.is_active?'checked':'')+'><span class="tswitch"></span><span>Cuenta activa</span></label></div>';
     h += '<div class="btn-row">';
     h += '<button class="btn primary" onclick="saveAccount('+a.id+')"><i class="ti ti-device-floppy"></i> Guardar cambios</button>';
+    h += '<button class="btn" onclick="showPassword('+a.id+')"><i class="ti ti-eye"></i> Ver contraseña</button>';
     h += '<button class="btn" onclick="resetPassword('+a.id+')"><i class="ti ti-key"></i> Resetear contraseña</button>';
     h += '<button class="btn danger" onclick="deleteAccount('+a.id+',\''+esc(a.username).replace(/'/g,"\\'")+'\')"><i class="ti ti-trash"></i> Eliminar</button>';
     h += '</div>';
@@ -362,6 +363,16 @@ async function saveAccount(id) {
   hideOverlay();
   if (!res.ok) { msgIn('acc-msg-'+id,'error',esc(res.error||'No se pudo guardar.')); return; }
   await loadOverview(); renderCuentas();
+}
+
+async function showPassword(id) {
+  showOverlay('Obteniendo contraseña...');
+  var res;
+  try { res = await adminRpc('admin_show_password', {p_id:id}); }
+  catch(e) { hideOverlay(); msgIn('acc-msg-'+id,'error','Error: '+esc(e.message)); return; }
+  hideOverlay();
+  if (!res.ok) { msgIn('acc-msg-'+id,'error',esc(res.error||'No se pudo obtener. Si es una cuenta creada antes de este cambio, reseteala una vez.')); return; }
+  msgIn('acc-msg-'+id,'info','Contraseña actual:<div class="pw-box"><i class="ti ti-key"></i><code>'+esc(res.password)+'</code></div>');
 }
 
 async function resetPassword(id) {
