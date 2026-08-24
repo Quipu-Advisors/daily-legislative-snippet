@@ -279,13 +279,17 @@ end $$;
 -- Solo accesible con la contraseña de admin.
 create or replace function admin_show_password(p_admin text, p_id bigint)
 returns jsonb language plpgsql security definer set search_path = public as $$
-declare p_enc text;
+declare p_enc text; p_plain text;
 begin
   perform _require_admin(p_admin);
   select pass_enc into p_enc from prospect_accounts where id = p_id;
   if p_enc is null then return jsonb_build_object('ok', false, 'error', 'Cuenta no encontrada'); end if;
-  return jsonb_build_object('ok', true, 'password',
-    extensions.pgp_sym_decrypt(decode(p_enc,'base64'), 'f5ba083d57d6c4a062bc9401c44d97560a79ad1b7a4e94c40c8af9e30d11f80a'));
+  begin
+    p_plain := extensions.pgp_sym_decrypt(decode(p_enc,'base64'), 'f5ba083d57d6c4a062bc9401c44d97560a79ad1b7a4e94c40c8af9e30d11f80a');
+  exception when others then
+    return jsonb_build_object('ok', false, 'error', 'No se puede mostrar (cuenta creada antes de este cambio) — reseteala una vez.');
+  end;
+  return jsonb_build_object('ok', true, 'password', p_plain);
 end $$;
 
 -- Elimina una cuenta.
