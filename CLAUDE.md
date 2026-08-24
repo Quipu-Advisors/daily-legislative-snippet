@@ -14,11 +14,22 @@ desde un módulo admin, y vencimiento de acceso configurable a **cualquier fecha
 ## Estado actual (actualizado 2026-08-24) — leer esto primero
 
 **Deploy completo y funcionando end-to-end**, salvo dominio propio (cosmético, no bloquea).
-Verificado hoy en producción (`daily-legislative-snippet.vercel.app`): login de prospecto y de
-admin cargan bien contra el Supabase real, `/api/sync` responde (probado sin credenciales reales,
-devolvió 401 como corresponde — confirma que las env vars de Vercel están bien cargadas). Falta
-que alguien entre a `admin.html` con la contraseña real y cree la primera cuenta de prueba, y
-correr una sincronización real para ver datos de verdad en `index.html`.
+Verificado hoy en producción (`daily-legislative-snippet.vercel.app`): login de admin confirmado
+funcionando con la contraseña real, `/api/sync` responde (probado sin credenciales reales, devolvió
+401 como corresponde — confirma que las env vars de Vercel están bien cargadas). Falta crear la
+primera cuenta de prueba desde `admin.html` y correr una sincronización real para ver datos de
+verdad en `index.html`.
+
+**⚠️ Bug crítico ya arreglado — si algo similar vuelve a pasar, leer esto:** `crypt`/`gen_salt`
+(pgcrypto) viven en el schema `extensions` de Supabase, no en `public`. Las funciones
+`SECURITY DEFINER` de `setup.sql` fijan `search_path = public` por seguridad, así que cualquier
+llamada sin calificar a `crypt`/`gen_salt` fallaba en tiempo de ejecución. Esto rompía **todo** lo
+que use contraseñas: `admin_check()` atrapaba el error y devolvía `false` siempre (parecía
+"contraseña incorrecta" con cualquier contraseña), y `prospect_login`/`admin_create_account`/
+`admin_reset_password` habrían tirado error directo. Ya está arreglado en el código (calificado
+como `extensions.crypt(...)`/`extensions.gen_salt(...)` en las 5 llamadas) y parchado en la base
+de Lucas. Si se crea otro proyecto Supabase Free con este mismo patrón, aplicar la calificación
+desde el arranque.
 
 Resto del historial de la puesta en marcha, por si hace falta retomar algo puntual:
 
