@@ -292,6 +292,19 @@ begin
   return jsonb_build_object('ok', true, 'password', p_plain);
 end $$;
 
+-- Todos los proyectos sincronizados (últimos 30 días), sin filtrar por sector ni
+-- jurisdicción — lo que vería un prospecto con acceso a todo. Solo para el admin.
+create or replace function admin_all_projects(p_admin text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  perform _require_admin(p_admin);
+  return jsonb_build_object('days', coalesce((
+    select jsonb_agg(jsonb_build_object('date', pp.date, 'data', pp.data) order by pp.date desc)
+    from projects_public pp
+    where pp.date >= current_date - 30
+  ), '[]'::jsonb));
+end $$;
+
 -- Elimina una cuenta.
 create or replace function admin_delete_account(p_admin text, p_id bigint)
 returns jsonb language plpgsql security definer set search_path = public as $$
