@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Legal Snippet — Quipu Advisors</title>
+<title>Daily Legislative Snippet — Quipu Advisors</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.31.0/iconfont/tabler-icons.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
@@ -98,7 +98,7 @@ body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-s
   <div class="overlay-box"><i class="ti ti-loader-2 spin"></i><p id="overlay-msg">Cargando...</p></div>
 </div>
 <nav class="nav">
-  <div class="nav-logo"><i class="ti ti-news" style="color:var(--accent)"></i> Daily Legal <span>Snippet</span></div>
+  <div class="nav-logo"><i class="ti ti-news" style="color:var(--accent)"></i> Daily Legislative <span>Snippet</span></div>
   <span class="nav-sub">by Quipu Advisors</span>
   <div class="nav-right" id="nav-right"></div>
 </nav>
@@ -107,7 +107,7 @@ body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-s
 /* ============================================================
    CONFIGURACION
    ============================================================ */
-// >>> Datos del proyecto Supabase del Daily Legal Snippet (NO el del Smart Snippet interno).
+// >>> Datos del proyecto Supabase del Daily Legislative Snippet (NO el del Smart Snippet interno).
 var SB_URL  = 'PEGAR_URL_SUPABASE';
 var SB_ANON = 'PEGAR_ANON_KEY';
 // Email de contacto comercial que aparece en el pie.
@@ -137,9 +137,11 @@ var JUR_ORDER = ['Nacional'].concat(PROVINCIAS).concat(['Municipal']);
 var SECTOR_OTRO = 'Otros', JUR_OTRA = 'Otras';
 
 var ACCOUNT = null;          // {display_name, sectors, jurs, expires_at}
+var CURRENT_USER = null;     // username, usado como clave de localStorage de filtros
 var DAYS = [];               // [{date, data:[...]}] tal como los devuelve el servidor
 var expanded = {}, searchQ = '';
 var mySectors = [], myJurs = [];   // universo de filtros de ESTA cuenta
+var initSecSel = [], initJurSel = [];   // selección de filtros restaurada de localStorage
 
 /* ============================================================
    UTILIDADES
@@ -167,7 +169,17 @@ function fechaLabel(iso) {
    ============================================================ */
 function savedAuth() { try { return JSON.parse(localStorage.getItem('dls_auth')||'null'); } catch(e){ return null; } }
 function setAuth(a) { try { if(a) localStorage.setItem('dls_auth', JSON.stringify(a)); else localStorage.removeItem('dls_auth'); } catch(e){} }
-function logout() { setAuth(null); ACCOUNT=null; DAYS=[]; buildNav(); renderLogin(); }
+function logout() { setAuth(null); ACCOUNT=null; CURRENT_USER=null; DAYS=[]; buildNav(); renderLogin(); }
+
+/* ============================================================
+   FILTROS GUARDADOS (por cuenta, recordados entre sesiones —
+   misma lógica que el localStorage de filtros de Smart Snippet)
+   ============================================================ */
+function filtersKey() { return 'dls_filters_' + (CURRENT_USER||''); }
+function loadSavedFilters() { try { return JSON.parse(localStorage.getItem(filtersKey())||'null'); } catch(e){ return null; } }
+function saveFilters() {
+  try { localStorage.setItem(filtersKey(), JSON.stringify({sectors: actives('sec-chk'), jurs: actives('jur-chk'), search: searchQ})); } catch(e){}
+}
 
 /* ============================================================
    LOGIN
@@ -176,7 +188,7 @@ function renderLogin(msg) {
   buildNav();
   var h = '<div class="login-wrap"><div class="login-card">';
   h += '<div class="login-by">Quipu Advisors</div>';
-  h += '<div class="login-brand">Daily Legal <span>Snippet</span></div>';
+  h += '<div class="login-brand">Daily Legislative <span>Snippet</span></div>';
   h += '<div class="login-sub">Monitoreo legislativo diario — Argentina, nacional y provincias.</div>';
   h += '<div class="login-err'+(msg?' show':'')+'" id="login-err">'+esc(msg||'')+'</div>';
   h += '<input type="text" class="gate-input" id="lg-user" placeholder="Usuario" autocomplete="username">';
@@ -216,10 +228,18 @@ async function enterApp(u, p) {
   hideOverlay();
   if (!res || !res.ok) { logout(); return; }
   DAYS = res.days || [];
+  CURRENT_USER = u;
   // Universo de filtros: lo permitido para la cuenta ([] = todo).
   mySectors = (ACCOUNT.sectors && ACCOUNT.sectors.length) ? ACCOUNT.sectors.slice() : SECTORES.concat([SECTOR_OTRO]);
   myJurs = (ACCOUNT.jurs && ACCOUNT.jurs.length) ? ACCOUNT.jurs.slice() : JUR_ORDER.concat([JUR_OTRA]);
-  expanded = {}; searchQ = '';
+  // Restaura la selección guardada de la última visita, acotada al universo actual
+  // (por si el admin le achicó el alcance de sectores/jurisdicciones después).
+  var saved = loadSavedFilters();
+  var savedSec = (saved && saved.sectors) ? saved.sectors.filter(function(s){ return mySectors.indexOf(s)>=0; }) : [];
+  var savedJur = (saved && saved.jurs) ? saved.jurs.filter(function(j){ return myJurs.indexOf(j)>=0; }) : [];
+  initSecSel = savedSec.length ? savedSec : mySectors.slice();
+  initJurSel = savedJur.length ? savedJur : myJurs.slice();
+  expanded = {}; searchQ = (saved && typeof saved.search === 'string') ? saved.search : '';
   buildNav(); renderMain();
 }
 
@@ -247,8 +267,8 @@ function renderMain() {
   h += '</div>';
   h += '<div class="list" id="list"></div>';
   h += '<div class="footer"><div class="footer-inner">';
-  h += '<div class="footer-txt"><b>Daily Legal Snippet</b> es una muestra de cortesía del monitoreo legislativo de <b>Quipu Advisors</b> (últimos 30 días). No constituye asesoramiento legal. La versión completa incluye histórico, análisis de impacto por industria y alertas personalizadas.</div>';
-  h += '<a class="footer-cta" href="mailto:'+esc(CONTACT_EMAIL)+'?subject='+encodeURIComponent('Daily Legal Snippet — versión completa')+'"><i class="ti ti-mail"></i> Quiero la versión completa</a>';
+  h += '<div class="footer-txt"><b>Daily Legislative Snippet</b> es una muestra de cortesía del monitoreo legislativo de <b>Quipu Advisors</b> (últimos 30 días). No constituye asesoramiento legal. La versión completa incluye histórico, análisis de impacto por industria y alertas personalizadas.</div>';
+  h += '<a class="footer-cta" href="mailto:'+esc(CONTACT_EMAIL)+'?subject='+encodeURIComponent('Daily Legislative Snippet — versión completa')+'"><i class="ti ti-mail"></i> Quiero la versión completa</a>';
   h += '</div></div>';
   document.getElementById('app').innerHTML = h;
   buildFilters(); renderList();
@@ -256,18 +276,19 @@ function renderMain() {
 
 function buildFilters() {
   var si = document.getElementById('sec-items');
-  if (si) si.innerHTML = mySectors.map(function(s){ return '<div class="dd-item" onclick="toggleChk(this,event)"><input type="checkbox" class="sec-chk" value="'+esc(s)+'" checked> '+esc(s)+'</div>'; }).join('');
+  if (si) si.innerHTML = mySectors.map(function(s){ var on = initSecSel.indexOf(s)>=0; return '<div class="dd-item" onclick="toggleChk(this,event)"><input type="checkbox" class="sec-chk" value="'+esc(s)+'"'+(on?' checked':'')+'> '+esc(s)+'</div>'; }).join('');
   var ji = document.getElementById('jur-items');
-  if (ji) ji.innerHTML = myJurs.map(function(j){ return '<div class="dd-item" onclick="toggleChk(this,event)"><input type="checkbox" class="jur-chk" value="'+esc(j)+'" checked> '+esc(j)+'</div>'; }).join('');
+  if (ji) ji.innerHTML = myJurs.map(function(j){ var on = initJurSel.indexOf(j)>=0; return '<div class="dd-item" onclick="toggleChk(this,event)"><input type="checkbox" class="jur-chk" value="'+esc(j)+'"'+(on?' checked':'')+'> '+esc(j)+'</div>'; }).join('');
+  updateBtns();
 }
-function setSearch(v) { searchQ = v||''; renderList(); }
+function setSearch(v) { searchQ = v||''; saveFilters(); renderList(); }
 function toggleMenu(type,e) { e.stopPropagation(); var id='dd-'+type+'-menu', other=type==='sec'?'dd-jur-menu':'dd-sec-menu'; document.getElementById(other).classList.remove('open'); document.getElementById(id).classList.toggle('open'); }
-function toggleChk(row,e) { e.stopPropagation(); var chk=row.querySelector('input'); if(e.target!==chk)chk.checked=!chk.checked; updateBtns(); renderList(); }
+function toggleChk(row,e) { e.stopPropagation(); var chk=row.querySelector('input'); if(e.target!==chk)chk.checked=!chk.checked; updateBtns(); saveFilters(); renderList(); }
 function toggleAll(type,e) {
   e.stopPropagation();
   var a=document.getElementById('chk-all-'+type); if(e.target!==a)a.checked=!a.checked;
   document.querySelectorAll('.'+type+'-chk').forEach(function(c){c.checked=a.checked;});
-  updateBtns(); renderList();
+  updateBtns(); saveFilters(); renderList();
 }
 function actives(cls) { return Array.from(document.querySelectorAll('.'+cls+':checked')).map(function(c){return c.value;}); }
 function updateBtns() {

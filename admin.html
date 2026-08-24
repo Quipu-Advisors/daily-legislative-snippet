@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Legal Snippet — Admin</title>
+<title>Daily Legislative Snippet — Admin</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.31.0/iconfont/tabler-icons.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
@@ -93,7 +93,7 @@ body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-s
   <div class="overlay-box"><i class="ti ti-loader-2 spin"></i><p id="overlay-msg">Cargando...</p></div>
 </div>
 <nav class="nav">
-  <div class="nav-logo"><i class="ti ti-news" style="color:var(--accent)"></i> Daily Legal <span>Snippet</span></div>
+  <div class="nav-logo"><i class="ti ti-news" style="color:var(--accent)"></i> Daily Legislative <span>Snippet</span></div>
   <span class="nav-admin">Admin</span>
   <div id="nav-tabs"></div>
   <div class="nav-right" id="nav-right"></div>
@@ -103,7 +103,7 @@ body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-s
 /* ============================================================
    CONFIGURACION
    ============================================================ */
-// >>> Proyecto Supabase del Daily Legal Snippet (el NUEVO, no el interno).
+// >>> Proyecto Supabase del Daily Legislative Snippet (el NUEVO, no el interno).
 var SB_URL  = 'PEGAR_URL_SUPABASE';
 var SB_ANON = 'PEGAR_ANON_KEY';
 
@@ -170,7 +170,7 @@ function renderGate(msg) {
   document.getElementById('nav-tabs').innerHTML=''; document.getElementById('nav-right').innerHTML='';
   var h = '<div class="login-wrap"><div class="login-card">';
   h += '<div class="login-title">Administración</div>';
-  h += '<div class="login-sub">Cuentas de prospectos y sincronización del Daily Legal Snippet.</div>';
+  h += '<div class="login-sub">Cuentas de prospectos y sincronización del Daily Legislative Snippet.</div>';
   if (msg) h += '<div class="alert error" style="margin:0 0 10px">'+esc(msg)+'</div>';
   h += '<input type="password" class="gate-input" id="gate-pass" placeholder="Contraseña de administración" onkeydown="if(event.key===\'Enter\')doGate()">';
   h += '<button class="btn primary" style="width:100%;justify-content:center" onclick="doGate()"><i class="ti ti-lock-open"></i> Entrar</button>';
