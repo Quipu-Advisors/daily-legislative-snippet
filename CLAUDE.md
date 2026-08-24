@@ -3,9 +3,101 @@
 Vitrina **gratuita para potenciales clientes** del monitoreo legislativo de Quipu Advisors.
 Es el hermano público del **Smart Snippet** interno (repo `camila509/Snippet-digital`): misma
 estética, pero **solo lectura**, con login por cuenta y filtros por sector/jurisdicción definidos
-desde un módulo admin.
+desde un módulo admin, y vencimiento de acceso configurable a **cualquier fecha** (así se resuelve
+"dar el monitoreo gratis por X meses" — no hay que tocar código para eso, es un campo del admin).
 
 > Mantenimiento con **Claude Code**: abrí esta carpeta y pedí el cambio en lenguaje natural.
+
+---
+
+## Estado actual (actualizado 2026-08-20) — leer esto primero
+
+**El código está 100% completo y no tiene bugs conocidos.** Lo único que falta es la parte de
+"clickear cosas en Supabase y Vercel" — nadie la hizo todavía. Verificado hoy:
+
+- ✅ Repo limpio, sincronizado con `origin/main` (2 commits). Nada para pushear.
+- ✅ `index.html`, `admin.html`, `api/sync.js`, `setup.sql`, `vercel.json` completos y
+  consistentes entre sí (mismas listas de sectores/jurisdicciones que el Smart Snippet).
+- ✅ El propio `index.html` detecta la falta de configuración y muestra un aviso prolijo
+  ("Configuración pendiente...") en vez de romperse — probado local hoy, sin errores de consola.
+- ⚠️ **GitHub Pages de este repo YA ESTÁ PRENDIDO** y sirviendo esa pantalla de "Configuración
+  pendiente" en `https://lucasdmartinez.github.io/daily-legal-snippet/` — público, pero sin
+  datos reales ni credenciales (son placeholders). No es urgente apagarlo, pero listo para
+  cuando Vercel esté vivo (ver Paso 4 más abajo).
+- ❌ **Nada de infraestructura está creado todavía**: sin proyecto Supabase propio, sin cuenta/
+  proyecto Vercel, sin dominio propio. `SB_URL`/`SB_ANON` en `index.html` y `admin.html` siguen
+  como `'PEGAR_URL_SUPABASE'` / `'PEGAR_ANON_KEY'`.
+
+**Qué falta para que esto quede funcionando (en orden, ~20-30 min, una sola vez):**
+
+### Paso 1 — Crear el proyecto Supabase (nuevo, separado del interno)
+
+1. Andá a [supabase.com](https://supabase.com) → **New Project**. Nombre sugerido:
+   `daily-legal-snippet` (organización: la misma que uses para el resto de Quipu, o una nueva
+   gratis — no importa, es un proyecto Free Tier aparte del Smart Snippet).
+2. Anotá la contraseña de la base que te pida crear (no la vas a necesitar de nuevo si no la
+   perdés, Supabase la pide solo para el Postgres directo, no para esto).
+3. Una vez creado, andá a **SQL Editor** → pegá **todo** el contenido de [`setup.sql`](setup.sql)
+   de esta carpeta.
+4. **Antes de correrlo**, en la línea marcada `>>> CAMBIAR <<<` (sección 2, cerca de la línea 66)
+   reemplazá `'CAMBIAME_ADMIN'` por la contraseña que quieras usar para entrar a `admin.html`.
+   Guardala — es la que vas a usar vos/Ventas para crear cuentas de prospectos.
+5. Click **Run**. Tiene que terminar sin error (crea 3 tablas + 9 funciones RPC).
+6. Andá a **Project Settings → API** y copiá dos valores:
+   - **Project URL** (algo como `https://xxxxxxxx.supabase.co`)
+   - **anon / public key** (empieza con `eyJ...` o `sb_publishable_...`)
+7. **Pasame esos dos valores** (URL + anon key) — con eso termino de pegarlos en `index.html` y
+   `admin.html` y hago el commit + push. No hace falta que los pegues vos a mano si preferís
+   dármelos en el chat: no son secretos sensibles (la clave anon está pensada para ser pública,
+   es la misma lógica que ya usa el Smart Snippet), pero **la contraseña de admin del Paso 4 no
+   me la pases** — esa se guarda hasheada en Supabase, no en el código, y solo la necesitás vos
+   para entrar a `admin.html` y para el env var `DLS_ADMIN_PASS` del Paso 3.
+
+### Paso 2 — Probar local (te lo hago yo)
+
+Con los dos valores del Paso 1, pego `SB_URL`/`SB_ANON` reales en ambos HTML, abro el preview
+local y confirmo que el login de `admin.html` funciona con tu contraseña y que se puede crear una
+cuenta de prueba. Recién ahí seguimos al deploy.
+
+### Paso 3 — Crear la cuenta/proyecto en Vercel
+
+Esto sí lo tenés que hacer vos (requiere tu login; no puedo completar formularios de cuentas de
+terceros por vos).
+
+1. [vercel.com](https://vercel.com) → **Sign up** con tu cuenta de GitHub (`lucasdmartinez`) si
+   no tenés cuenta ya.
+2. **Add New → Project** → importá el repo `lucasdmartinez/daily-legal-snippet`. Vercel detecta
+   `vercel.json` solo (el cron ya está definido ahí, no hay que tocar nada de build settings:
+   es HTML estático + una función serverless, sin build step).
+3. Antes de darle **Deploy**, o después en **Settings → Environment Variables**, cargá estas 5:
+
+   | Variable | Valor |
+   |---|---|
+   | `INTERNAL_SB_URL` | *(no hace falta, ya está hardcodeada en `api/sync.js` — no la agregues)* |
+   | `INTERNAL_SB_ANON` | `sb_publishable_LHaQlBOrhJ5CRyISMiuXhg_0s6Unaxf` (la clave anon del Smart Snippet — pública, ya está en `snippet-digital-repo/index.html`, la copio yo si preferís) |
+   | `DLS_SB_URL` | La **Project URL** de Supabase que sacaste en el Paso 1 |
+   | `DLS_SB_ANON` | La **anon key** de Supabase que sacaste en el Paso 1 |
+   | `DLS_ADMIN_PASS` | La contraseña de admin que pusiste en el Paso 1.4 (la real, no `CAMBIAME_ADMIN`) |
+   | `CRON_SECRET` | Cualquier string largo random — generalo vos, ej. pegando 40 caracteres random; no hace falta anotarlo en ningún otro lado, Vercel lo usa solo para autenticar su propio cron |
+
+4. Deploy. Vercel te da una URL tipo `daily-legal-snippet.vercel.app` — ya queda funcionando ahí
+   (podés probar `admin.html` con tu contraseña, crear una cuenta de prueba, y tocar
+   "Sincronizar ahora" para traer los últimos 30 días del Smart Snippet).
+5. El cron diario (`vercel.json`, `0 15 * * *` = 12:00 ART) sincroniza solo desde ese momento en
+   adelante — no hace falta hacer nada más.
+
+### Paso 4 — (Opcional, después) Dominio propio + apagar GitHub Pages
+
+- Dominio propio: Vercel → **Settings → Domains** → agregar el subdominio que quieras (ej.
+  `prospectos.quipuadvisors.com`) → te da un registro CNAME para cargar en el DNS de
+  `quipuadvisors.com`. Esto es cosmético, no bloquea nada — se puede hacer cuando quieras.
+- Una vez que Vercel esté sirviendo la app real (con datos), avisame y apago el GitHub Pages de
+  este repo (`gh api -X DELETE repos/lucasdmartinez/daily-legal-snippet/pages`) para que no quede
+  una copia vieja/placeholder dando vueltas en dos URLs distintas.
+
+**Resumen de quién hace qué:** Vos hacés Supabase (Paso 1, ~10 min) y Vercel (Paso 3, ~10 min,
+requiere tu login). Yo hago el resto: pegar las claves en el código, probar, pushear, y avisarte
+cuando esté todo verificado end-to-end.
 
 ---
 
