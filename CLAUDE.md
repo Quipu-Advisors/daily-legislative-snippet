@@ -180,13 +180,27 @@ exponer clientes, y no está planeado.
 ### Modelo de seguridad (distinto del interno, a propósito)
 
 - RLS habilitado sin policies → la clave anon **no puede leer ninguna tabla directamente**.
-- Todo pasa por funciones RPC `SECURITY DEFINER` que validan credenciales con bcrypt
-  (pgcrypto) en cada llamada: `prospect_login`, `prospect_projects`, `admin_*`.
+- Todo pasa por funciones RPC `SECURITY DEFINER` que validan credenciales en cada llamada:
+  `prospect_login`, `prospect_projects`, `admin_*`.
 - El filtrado por sector/jurisdicción y la ventana de 30 días se aplican **en el servidor**:
   el prospecto nunca recibe datos que no le corresponden, ni mirando el network tab.
-- Las contraseñas se guardan hasheadas: no se recuperan, se resetean.
+- **Contraseña de admin**: hasheada con bcrypt (irreversible) — no se recupera, se resetea.
+  Protege todo lo demás, no se toca este criterio.
+- **Contraseñas de prospectos**: cifradas de forma **reversible** (pgcrypto
+  `pgp_sym_encrypt`/`pgp_sym_decrypt`, columna `pass_enc`), a propósito — decisión de Lucas
+  (2026-08-24): son tokens generados por Quipu (no elegidos ni reusados por el prospecto) que
+  solo destraban información pública, y el admin necesita poder mostrárselas de nuevo si se
+  pierden, sin resetear cada vez. Botón "Ver contraseña" en `admin.html` (RPC
+  `admin_show_password`). La clave de cifrado (`PASS_ENC_KEY`) está hardcodeada en las 4
+  funciones que la usan en `setup.sql` — cuentas creadas antes de este cambio (con el hash
+  bcrypt viejo) no se pueden "ver", solo resetear una vez para pasarlas al formato nuevo.
 - La clave anon de la base **interna** NO está en el código: vive como variable de entorno
   en Vercel y solo la usa `api/sync.js`.
+- ⚠️ **Ojo con `search_path`**: `crypt`/`gen_salt`/`pgp_sym_encrypt`/`pgp_sym_decrypt` de
+  pgcrypto viven en el schema `extensions` de Supabase, no en `public`. Las funciones fijan
+  `search_path = public` por seguridad, así que **toda** llamada a estas funciones debe ir
+  calificada como `extensions.crypt(...)` etc. — si no, falla en tiempo de ejecución (ver bug
+  documentado en "Estado actual" más arriba).
 
 ---
 
