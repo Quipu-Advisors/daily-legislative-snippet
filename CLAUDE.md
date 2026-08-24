@@ -41,9 +41,13 @@ desde un módulo admin, y vencimiento de acceso configurable a **cualquier fecha
   pendiente" en `https://quipu-advisors.github.io/daily-legislative-snippet/` — público, pero sin
   datos reales ni credenciales (son placeholders). No es urgente apagarlo, pero se apaga cuando
   Vercel + el dominio propio estén vivos (ver Paso 4 más abajo).
-- ❌ **Nada de infraestructura está creado todavía**: sin proyecto Supabase propio, sin cuenta/
-  proyecto Vercel, sin dominio propio. `SB_URL`/`SB_ANON` en `index.html` y `admin.html` siguen
-  como `'PEGAR_URL_SUPABASE'` / `'PEGAR_ANON_KEY'`.
+- ✅ **Vercel ya está deployado** (2026-08-24): `daily-legislative-snippet.vercel.app`, cuenta
+  personal de Lucas en plan Hobby (gratis — decisión consciente, ver memoria del proyecto).
+  Muestra "Configuración pendiente" como es esperable — todavía sin Supabase ni env vars.
+  Smart Snippet también deployado en paralelo: `snippet-digital.vercel.app`, funcionando.
+- ❌ **Falta el proyecto Supabase propio** de este proyecto (Paso 1 abajo). `SB_URL`/`SB_ANON`
+  en `index.html` y `admin.html` siguen como `'PEGAR_URL_SUPABASE'` / `'PEGAR_ANON_KEY'`, y el
+  proyecto de Vercel todavía no tiene las 5 variables de entorno cargadas (Paso 3).
 - 📌 **Decisión pendiente, no bloqueante:** notificación por email al prospecto. Lucas se
   inclina (2026-08-24, "vamos viendo") por un correo **general** (no personalizado por cuenta)
   con las novedades del día + link al sitio, pero todavía no está resuelto el proveedor de email
@@ -81,19 +85,11 @@ Con los dos valores del Paso 1, pego `SB_URL`/`SB_ANON` reales en ambos HTML, ab
 local y confirmo que el login de `admin.html` funciona con tu contraseña y que se puede crear una
 cuenta de prueba. Recién ahí seguimos al deploy.
 
-### Paso 3 — Crear la cuenta/proyecto en Vercel
+### Paso 3 — Cargar las variables de entorno en Vercel
 
-Esto sí lo tenés que hacer vos (requiere tu login; no puedo completar formularios de cuentas de
-terceros por vos).
-
-1. [vercel.com](https://vercel.com) → **Sign up/Log in** con GitHub. Si vas a crear un Team de
-   Vercel para Quipu (recomendado para consolidar, en vez de que quede bajo tu cuenta personal),
-   hacelo antes de importar el proyecto. Instalá la Vercel GitHub App con acceso a la organización
-   `Quipu-Advisors` cuando te lo pida (si no aparece el repo al importar, es por esto).
-2. **Add New → Project** → importá el repo `Quipu-Advisors/daily-legislative-snippet`. Vercel
-   detecta `vercel.json` solo (el cron ya está definido ahí, no hay que tocar nada de build
-   settings: es HTML estático + una función serverless, sin build step).
-3. Antes de darle **Deploy**, o después en **Settings → Environment Variables**, cargá estas 5:
+**Ya hecho (2026-08-24):** proyecto de Vercel creado e importado (`daily-legislative-snippet.vercel.app`,
+cuenta personal de Lucas, plan Hobby gratis — decisión consciente). Falta cargar las 5 variables
+de entorno (**Settings → Environment Variables** del proyecto en Vercel):
 
    | Variable | Valor |
    |---|---|
@@ -104,11 +100,12 @@ terceros por vos).
    | `DLS_ADMIN_PASS` | La contraseña de admin que pusiste en el Paso 1.4 (la real, no `CAMBIAME_ADMIN`) |
    | `CRON_SECRET` | Cualquier string largo random — generalo vos, ej. pegando 40 caracteres random; no hace falta anotarlo en ningún otro lado, Vercel lo usa solo para autenticar su propio cron |
 
-4. Deploy. Vercel te da una URL tipo `daily-legislative-snippet.vercel.app` — ya queda funcionando ahí
-   (podés probar `admin.html` con tu contraseña, crear una cuenta de prueba, y tocar
-   "Sincronizar ahora" para traer los últimos 30 días del Smart Snippet).
-5. El cron diario (`vercel.json`, `0 15 * * *` = 12:00 ART) sincroniza solo desde ese momento en
-   adelante — no hace falta hacer nada más.
+Después de cargar las 5 variables, hay que forzar un **Redeploy** (Vercel no las aplica solo con
+guardarlas — pestaña **Deployments** del proyecto → "..." del último deploy → **Redeploy**). Ya
+queda funcionando en `daily-legislative-snippet.vercel.app` (podés probar `admin.html` con tu
+contraseña, crear una cuenta de prueba, y tocar "Sincronizar ahora" para traer los últimos 30
+días del Smart Snippet). El cron diario (`vercel.json`, `0 15 * * *` = 12:00 ART) sincroniza
+solo desde ese momento en adelante — no hace falta hacer nada más.
 
 ### Paso 4 — Dominio propio + apagar GitHub Pages
 
