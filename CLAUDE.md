@@ -124,13 +124,14 @@ contraseña, crear una cuenta de prueba, y tocar "Sincronizar ahora" para traer 
 días del Smart Snippet). El cron diario (`vercel.json`, `0 15 * * *` = 12:00 ART) sincroniza
 solo desde ese momento en adelante — no hace falta hacer nada más.
 
-### Paso 4 — Dominio propio + apagar GitHub Pages
+### Paso 4 — Dominio propio (✅ listo, 2026-08-24) + apagar GitHub Pages (pendiente)
 
-- Dominio elegido: **`monitoreolegislativo.quipuadvisors.com`**. En Vercel → **Settings →
-  Domains** → agregalo al proyecto; Vercel te da un registro CNAME (o A, según el caso) para
-  cargar en el DNS de `quipuadvisors.com` en GoDaddy. Eso lo hacés vos (acceso a GoDaddy).
-- Una vez que Vercel esté sirviendo la app real (con datos) en el dominio propio, avisame y apago
-  el GitHub Pages de este repo (`gh api -X DELETE repos/Quipu-Advisors/daily-legislative-snippet/pages`)
+- **Dominio propio activo**: `https://monitoreolegislativo.quipuadvisors.com` (y `/admin.html`).
+  CNAME en GoDaddy apuntando a `5c926fa0efe8b83f.vercel-dns-017.com`. Verificado con `curl`:
+  200 OK, HTTPS válido. Smart Snippet también tiene el suyo:
+  `smartsnippet.quipuadvisors.com` (CNAME a `1c7a9ac1d03b311b.vercel-dns-017.com`).
+- Pendiente: avisar cuando el dominio propio esté siendo usado de verdad y apagar el GitHub
+  Pages de este repo (`gh api -X DELETE repos/Quipu-Advisors/daily-legislative-snippet/pages`)
   para que no quede una copia vieja/placeholder dando vueltas en dos URLs distintas.
 
 **Resumen de quién hace qué:** Vos hacés Supabase (Paso 1, ~10 min) y Vercel (Paso 3, ~10 min,
