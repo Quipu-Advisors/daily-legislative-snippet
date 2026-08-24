@@ -124,7 +124,7 @@ var SECTOR_OTRO = 'Otros', JUR_OTRA = 'Otras';
 var SECTOR_PICK = SECTORES.concat([SECTOR_OTRO]);
 var JUR_PICK = JUR_ORDER.concat([JUR_OTRA]);
 
-var ADMIN_PASS = null, OV = {accounts: [], dates: []}, tab = 'cuentas', openAcc = {};
+var ADMIN_PASS = null, OV = {accounts: [], dates: []}, tab = 'cuentas', openAcc = {}, showNewAcc = false;
 
 /* ============================================================
    UTILIDADES
@@ -247,22 +247,29 @@ function renderCuentas() {
   var h = '<div class="admin-body">';
 
   // --- Alta ---
-  h += '<div class="admin-card">';
-  h += '<div class="admin-card-title"><i class="ti ti-user-plus"></i> Nueva cuenta de prospecto</div>';
-  h += '<div class="admin-card-sub">Crea el acceso y definí qué sectores y jurisdicciones va a ver. La contraseña no se puede recuperar después: copiala y compartila al crearla.</div>';
-  h += '<div class="field-grid">';
-  h += '<div class="field"><label>Usuario (para el login)</label><input type="text" id="new-user" placeholder="ej: acme"></div>';
-  h += '<div class="field"><label>Empresa / contacto (se muestra en la app)</label><input type="text" id="new-display" placeholder="ej: ACME S.A."></div>';
-  h += '</div>';
-  h += '<div class="field-grid">';
-  h += '<div class="field"><label>Contraseña</label><div class="inline-row"><input type="text" id="new-pass" style="flex:1;font-family:monospace" value="'+genPassword()+'"><button class="btn sm" onclick="document.getElementById(\'new-pass\').value=genPassword()"><i class="ti ti-refresh"></i></button></div></div>';
-  h += '<div class="field"><label>Vencimiento del acceso</label><div class="inline-row"><input type="date" id="new-exp" value="'+isoPlusDays(30)+'" min="'+isoToday()+'"><label class="toggle"><input type="checkbox" id="new-noexp" onchange="document.getElementById(\'new-exp\').disabled=this.checked"><span class="tswitch"></span><span>Sin vencimiento</span></label></div></div>';
-  h += '</div>';
-  h += filterPickerHTML('new', [], []);
-  h += '<div class="field" style="margin-top:10px"><label>Notas internas (no las ve el prospecto)</label><input type="text" id="new-notes" placeholder="ej: contacto de María, interesado en litio"></div>';
-  h += '<div class="btn-row"><button class="btn primary" onclick="createAccount()"><i class="ti ti-plus"></i> Crear cuenta</button></div>';
-  h += '<div id="create-msg"></div>';
-  h += '</div>';
+  if (!showNewAcc) {
+    h += '<div class="admin-card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">';
+    h += '<div class="admin-card-title" style="margin-bottom:0"><i class="ti ti-user-plus"></i> Nueva cuenta de prospecto</div>';
+    h += '<button class="btn primary" onclick="toggleNewAcc(true)"><i class="ti ti-plus"></i> Crear cuenta</button>';
+    h += '</div>';
+  } else {
+    h += '<div class="admin-card">';
+    h += '<div class="admin-card-title"><i class="ti ti-user-plus"></i> Nueva cuenta de prospecto</div>';
+    h += '<div class="admin-card-sub">Crea el acceso y definí qué sectores y jurisdicciones va a ver. La contraseña no se puede recuperar después: copiala y compartila al crearla.</div>';
+    h += '<div class="field-grid">';
+    h += '<div class="field"><label>Usuario (para el login)</label><input type="text" id="new-user" placeholder="ej: acme"></div>';
+    h += '<div class="field"><label>Empresa / contacto (se muestra en la app)</label><input type="text" id="new-display" placeholder="ej: ACME S.A."></div>';
+    h += '</div>';
+    h += '<div class="field-grid">';
+    h += '<div class="field"><label>Contraseña</label><div class="inline-row"><input type="text" id="new-pass" style="flex:1;font-family:monospace" value="'+genPassword()+'"><button class="btn sm" onclick="document.getElementById(\'new-pass\').value=genPassword()"><i class="ti ti-refresh"></i></button></div></div>';
+    h += '<div class="field"><label>Vencimiento del acceso</label><div class="inline-row"><input type="date" id="new-exp" value="'+isoPlusDays(30)+'" min="'+isoToday()+'"><label class="toggle"><input type="checkbox" id="new-noexp" onchange="document.getElementById(\'new-exp\').disabled=this.checked"><span class="tswitch"></span><span>Sin vencimiento</span></label></div></div>';
+    h += '</div>';
+    h += filterPickerHTML('new', [], []);
+    h += '<div class="field" style="margin-top:10px"><label>Notas internas (no las ve el prospecto)</label><input type="text" id="new-notes" placeholder="ej: contacto de María, interesado en litio"></div>';
+    h += '<div class="btn-row"><button class="btn primary" onclick="createAccount()"><i class="ti ti-plus"></i> Crear cuenta</button><button class="btn" onclick="toggleNewAcc(false)">Cancelar</button></div>';
+    h += '<div id="create-msg"></div>';
+    h += '</div>';
+  }
 
   // --- Listado ---
   h += '<div class="admin-card">';
@@ -312,6 +319,7 @@ function accCardHTML(a) {
 }
 
 function toggleAcc(id) { if(openAcc[id]) delete openAcc[id]; else openAcc[id]=true; renderCuentas(); }
+function toggleNewAcc(v) { showNewAcc = v; renderCuentas(); }
 function msgIn(elId, cls, txt) { var el=document.getElementById(elId); if(el) el.innerHTML='<div class="alert '+cls+'">'+txt+'</div>'; }
 
 async function createAccount() {
