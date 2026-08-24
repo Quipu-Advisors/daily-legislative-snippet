@@ -1,7 +1,8 @@
 # Daily Legislative Snippet — Guía del proyecto
 
 Vitrina **gratuita para potenciales clientes** del monitoreo legislativo de Quipu Advisors.
-Es el hermano público del **Smart Snippet** interno (repo `camila509/Snippet-digital`): misma
+Es el hermano público del **Smart Snippet** interno (repo `camila509/Snippet-digital`, pendiente
+de migrar a `Quipu-Advisors/Snippet-digital` — ver "Plan de consolidación de hosting" abajo): misma
 estética, pero **solo lectura**, con login por cuenta y filtros por sector/jurisdicción definidos
 desde un módulo admin, y vencimiento de acceso configurable a **cualquier fecha** (así se resuelve
 "dar el monitoreo gratis por X meses" — no hay que tocar código para eso, es un campo del admin).
@@ -15,9 +16,20 @@ desde un módulo admin, y vencimiento de acceso configurable a **cualquier fecha
 **El código está 100% completo y no tiene bugs conocidos.** Lo único que falta es la parte de
 "clickear cosas en Supabase y Vercel" — nadie la hizo todavía. Verificado hoy:
 
-- ✅ Repo renombrado de `daily-legal-snippet` a **`lucasdmartinez/daily-legislative-snippet`**
-  (2026-08-24, para no confundirlo con el correo interno homónimo). Carpeta local y remote
-  actualizados. Limpio, sincronizado con `origin/main`. Nada para pushear más allá de este cambio.
+- ✅ Repo renombrado de `daily-legal-snippet` a `daily-legislative-snippet` (2026-08-24, para no
+  confundirlo con el correo interno homónimo) y transferido a la organización de GitHub de Quipu:
+  **`Quipu-Advisors/daily-legislative-snippet`**. Carpeta local y remote actualizados. Limpio,
+  sincronizado con `origin/main`.
+- 📋 **Plan de consolidación de hosting (2026-08-24):** hoy Smart Snippet vive en GitHub Pages
+  bajo la cuenta personal de Camila (`camila509/Snippet-digital`) y este repo iba a Vercel bajo
+  la cuenta personal de Lucas. Se decidió: (1) los dos repos pasan a la organización
+  `Quipu-Advisors` — este ya migrado, **falta que Camila transfiera `camila509/Snippet-digital`**
+  a la organización (Settings → Danger Zone → Transfer, en su repo — Lucas es admin de la org y
+  puede aceptar la transferencia, pero solo Camila puede iniciarla porque Lucas no tiene permiso
+  admin sobre ese repo, solo push); (2) las dos apps se despliegan en Vercel (no en GitHub Pages),
+  conectadas a la organización; (3) este repo obtiene dominio propio
+  **`monitoreolegislativo.quipuadvisors.com`** (CNAME a cargar en el DNS de GoDaddy una vez que
+  Vercel esté configurado); Smart Snippet, al ser 100% interno, no necesita dominio propio.
 - ✅ `index.html`, `admin.html`, `api/sync.js`, `setup.sql`, `vercel.json` completos y
   consistentes entre sí (mismas listas de sectores/jurisdicciones que el Smart Snippet).
 - ✅ El propio `index.html` detecta la falta de configuración y muestra un aviso prolijo
@@ -26,9 +38,9 @@ desde un módulo admin, y vencimiento de acceso configurable a **cualquier fecha
   (localStorage por cuenta, igual que Smart Snippet) — antes se reseteaban a "todos" en cada
   login. Falta de todos modos la prueba end-to-end con Supabase real (ver "Verificar un cambio").
 - ⚠️ **GitHub Pages de este repo YA ESTÁ PRENDIDO** y sirviendo esa pantalla de "Configuración
-  pendiente" en `https://lucasdmartinez.github.io/daily-legislative-snippet/` — público, pero sin
-  datos reales ni credenciales (son placeholders). No es urgente apagarlo, pero listo para
-  cuando Vercel esté vivo (ver Paso 4 más abajo).
+  pendiente" en `https://quipu-advisors.github.io/daily-legislative-snippet/` — público, pero sin
+  datos reales ni credenciales (son placeholders). No es urgente apagarlo, pero se apaga cuando
+  Vercel + el dominio propio estén vivos (ver Paso 4 más abajo).
 - ❌ **Nada de infraestructura está creado todavía**: sin proyecto Supabase propio, sin cuenta/
   proyecto Vercel, sin dominio propio. `SB_URL`/`SB_ANON` en `index.html` y `admin.html` siguen
   como `'PEGAR_URL_SUPABASE'` / `'PEGAR_ANON_KEY'`.
@@ -74,11 +86,13 @@ cuenta de prueba. Recién ahí seguimos al deploy.
 Esto sí lo tenés que hacer vos (requiere tu login; no puedo completar formularios de cuentas de
 terceros por vos).
 
-1. [vercel.com](https://vercel.com) → **Sign up** con tu cuenta de GitHub (`lucasdmartinez`) si
-   no tenés cuenta ya.
-2. **Add New → Project** → importá el repo `lucasdmartinez/daily-legislative-snippet`. Vercel detecta
-   `vercel.json` solo (el cron ya está definido ahí, no hay que tocar nada de build settings:
-   es HTML estático + una función serverless, sin build step).
+1. [vercel.com](https://vercel.com) → **Sign up/Log in** con GitHub. Si vas a crear un Team de
+   Vercel para Quipu (recomendado para consolidar, en vez de que quede bajo tu cuenta personal),
+   hacelo antes de importar el proyecto. Instalá la Vercel GitHub App con acceso a la organización
+   `Quipu-Advisors` cuando te lo pida (si no aparece el repo al importar, es por esto).
+2. **Add New → Project** → importá el repo `Quipu-Advisors/daily-legislative-snippet`. Vercel
+   detecta `vercel.json` solo (el cron ya está definido ahí, no hay que tocar nada de build
+   settings: es HTML estático + una función serverless, sin build step).
 3. Antes de darle **Deploy**, o después en **Settings → Environment Variables**, cargá estas 5:
 
    | Variable | Valor |
@@ -96,14 +110,14 @@ terceros por vos).
 5. El cron diario (`vercel.json`, `0 15 * * *` = 12:00 ART) sincroniza solo desde ese momento en
    adelante — no hace falta hacer nada más.
 
-### Paso 4 — (Opcional, después) Dominio propio + apagar GitHub Pages
+### Paso 4 — Dominio propio + apagar GitHub Pages
 
-- Dominio propio: Vercel → **Settings → Domains** → agregar el subdominio que quieras (ej.
-  `prospectos.quipuadvisors.com`) → te da un registro CNAME para cargar en el DNS de
-  `quipuadvisors.com`. Esto es cosmético, no bloquea nada — se puede hacer cuando quieras.
-- Una vez que Vercel esté sirviendo la app real (con datos), avisame y apago el GitHub Pages de
-  este repo (`gh api -X DELETE repos/lucasdmartinez/daily-legislative-snippet/pages`) para que no quede
-  una copia vieja/placeholder dando vueltas en dos URLs distintas.
+- Dominio elegido: **`monitoreolegislativo.quipuadvisors.com`**. En Vercel → **Settings →
+  Domains** → agregalo al proyecto; Vercel te da un registro CNAME (o A, según el caso) para
+  cargar en el DNS de `quipuadvisors.com` en GoDaddy. Eso lo hacés vos (acceso a GoDaddy).
+- Una vez que Vercel esté sirviendo la app real (con datos) en el dominio propio, avisame y apago
+  el GitHub Pages de este repo (`gh api -X DELETE repos/Quipu-Advisors/daily-legislative-snippet/pages`)
+  para que no quede una copia vieja/placeholder dando vueltas en dos URLs distintas.
 
 **Resumen de quién hace qué:** Vos hacés Supabase (Paso 1, ~10 min) y Vercel (Paso 3, ~10 min,
 requiere tu login). Yo hago el resto: pegar las claves en el código, probar, pushear, y avisarte
