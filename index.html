@@ -243,6 +243,23 @@ async function enterApp(u, p) {
   buildNav(); renderMain();
 }
 
+async function enterPreview(adminPass) {
+  showOverlay('Cargando vista previa...');
+  var res;
+  try { res = await rpc('admin_all_projects', {p_admin: adminPass}); }
+  catch(e) { hideOverlay(); document.getElementById('app').innerHTML = '<div class="empty" style="padding:4rem">No se pudo cargar la vista previa. Contraseña de administración incorrecta o error de conexión.</div>'; return; }
+  hideOverlay();
+  ACCOUNT = {display_name: 'Vista previa — todos los sectores y jurisdicciones', sectors: [], jurs: [], expires_at: null};
+  CURRENT_USER = '__preview__';
+  DAYS = res.days || [];
+  mySectors = SECTORES.concat([SECTOR_OTRO]);
+  myJurs = JUR_ORDER.concat([JUR_OTRA]);
+  initSecSel = mySectors.slice();
+  initJurSel = myJurs.slice();
+  expanded = {}; searchQ = '';
+  buildNav(); renderMain();
+}
+
 function buildNav() {
   var right = document.getElementById('nav-right');
   if (!ACCOUNT) { right.innerHTML=''; return; }
@@ -387,6 +404,10 @@ function toggleCard(id,e) { id=String(id); if(e.target.tagName==='A')return; if(
     document.getElementById('app').innerHTML = '<div class="empty" style="padding:4rem"><i class="ti ti-settings" style="font-size:28px;display:block;margin:0 auto 10px"></i>Configuración pendiente: falta pegar la URL y la clave del proyecto Supabase en index.html.</div>';
     return;
   }
+  // Modo vista previa (usado desde admin.html): ?preview=<contraseña admin>
+  // Muestra todo sin filtrar, con la misma app y el mismo render que ve un prospecto real.
+  var previewPass = new URLSearchParams(location.search).get('preview');
+  if (previewPass) { await enterPreview(previewPass); return; }
   var a = savedAuth();
   if (!a) { renderLogin(); return; }
   showOverlay('Ingresando...');
