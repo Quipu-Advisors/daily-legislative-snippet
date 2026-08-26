@@ -413,21 +413,27 @@ async function deleteAccount(id, user) {
    PESTAÑA VISTA PREVIA (todos los sectores/jurisdicciones)
    ============================================================ */
 function openPreview() {
-  // La contraseña nunca va en la URL (queda en historial, se ve al pasar el mouse,
-  // se puede copiar el link). Se manda por sessionStorage entre pestañas del mismo
-  // origen y se borra apenas index.html la lee, una sola vez.
+  // Mismo mecanismo que el iframe de abajo: la contraseña nunca va en la URL,
+  // viaja por sessionStorage e index.html la lee una sola vez y la borra.
   try { sessionStorage.setItem('dls_preview_pass', ADMIN_PASS); } catch(e) {}
   window.open('index.html?preview=1', '_blank');
 }
 
 function renderPreview() {
   var h = '<div class="admin-body">';
-  h += '<div class="admin-card">';
-  h += '<div class="admin-card-title"><i class="ti ti-eye"></i> Vista previa</div>';
-  h += '<div class="admin-card-sub">Abre la app real del prospecto, sin login, mostrando todo sin filtrar por sector ni jurisdicción — exactamente lo mismo que ve un prospecto con acceso a todo (mismo diseño, mismos filtros, misma búsqueda). Se abre en una pestaña nueva.</div>';
-  h += '<div class="btn-row" style="margin-top:0"><button class="btn primary" onclick="openPreview()"><i class="ti ti-external-link"></i> Abrir vista previa</button></div>';
+  h += '<div class="admin-card" style="padding:0;overflow:hidden">';
+  h += '<div style="padding:1.5rem 1.5rem 1rem;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">';
+  h += '<div><div class="admin-card-title" style="margin-bottom:4px"><i class="ti ti-eye"></i> Vista previa</div>';
+  h += '<div class="admin-card-sub" style="margin-bottom:0">La app real del prospecto, sin login, mostrando todo sin filtrar por sector ni jurisdicción — exactamente lo mismo que ve un prospecto con acceso a todo (mismo diseño, mismos filtros, misma búsqueda).</div></div>';
+  h += '<button class="btn sm" onclick="openPreview()" style="white-space:nowrap"><i class="ti ti-external-link"></i> Abrir en pestaña nueva</button>';
+  h += '</div>';
+  h += '<iframe id="preview-frame" style="width:100%;height:78vh;border:0;border-top:1px solid var(--border);display:block"></iframe>';
   h += '</div></div>';
   document.getElementById('app').innerHTML = h;
+  // La contraseña viaja por sessionStorage (mismo origen, misma pestaña — el iframe
+  // la lee directo, nunca aparece en ninguna URL) y se borra apenas se usa.
+  try { sessionStorage.setItem('dls_preview_pass', ADMIN_PASS); } catch(e) {}
+  document.getElementById('preview-frame').src = 'index.html?preview=1';
 }
 
 /* ============================================================
