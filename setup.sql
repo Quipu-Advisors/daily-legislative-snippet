@@ -23,12 +23,21 @@
 create extension if not exists pgcrypto;
 
 -- Clave simétrica para cifrar/descifrar contraseñas de PROSPECTOS (reversible).
--- No hace falta memorizarla ni compartirla — solo la usan las funciones de
--- este archivo. Si alguna vez la cambiás, las contraseñas ya creadas dejan
--- de poder mostrarse/verificarse (quedan a resetear, como antes).
--- >>> PASS_ENC_KEY (opcional cambiar) <<<
--- Se repite igual en _prospect_auth, admin_create_account, admin_reset_password
--- y admin_show_password.
+-- NO vive en este archivo (se commitea a git) — se lee de un parámetro de
+-- configuración de la base (`app.settings.pass_enc_key`), leído en runtime
+-- con current_setting() en _prospect_auth, admin_create_account,
+-- admin_reset_password y admin_show_password.
+--
+-- >>> PASO MANUAL, UNA SOLA VEZ, en el SQL Editor de Supabase (no en este
+-- archivo) <<<:
+--   alter database postgres set app.settings.pass_enc_key = '<clave larga random>';
+-- Después de correrlo hace falta una reconexión (Supabase → Settings →
+-- Database → "Restart" del pooler, o simplemente esperar: las conexiones
+-- nuevas ya la ven). Si alguna vez la cambiás, las contraseñas de prospectos
+-- ya creadas dejan de poder mostrarse/verificarse (quedan a resetear).
+-- Probar después: login de un prospecto existente + "Ver contraseña" desde
+-- admin.html. Si current_setting() no encuentra el parámetro, las funciones
+-- van a fallar (no van a devolver "contraseña incorrecta" silenciosamente).
 
 -- ============================================================
 -- 1. TABLAS
@@ -113,7 +122,7 @@ begin
     return null;
   end if;
   begin
-    if extensions.pgp_sym_decrypt(decode(acc.pass_enc,'base64'), 'f5ba083d57d6c4a062bc9401c44d97560a79ad1b7a4e94c40c8af9e30d11f80a') <> coalesce(p_pass,'') then
+    if extensions.pgp_sym_decrypt(decode(acc.pass_enc,'base64'), current_setting('app.settings.pass_enc_key')) <> coalesce(p_pass,'') then
       return null;
     end if;
   exception when others then
@@ -237,7 +246,7 @@ begin
     return jsonb_build_object('ok', false, 'error', 'Ese usuario ya existe');
   end if;
   insert into prospect_accounts (username, pass_enc, display_name, sectors, jurs, expires_at, notes)
-  values (lower(trim(p_username)), encode(extensions.pgp_sym_encrypt(p_pass, 'f5ba083d57d6c4a062bc9401c44d97560a79ad1b7a4e94c40c8af9e30d11f80a'), 'base64'), coalesce(p_display,''),
+  values (lower(trim(p_username)), encode(extensions.pgp_sym_encrypt(p_pass, current_setting('app.settings.pass_enc_key')), 'base64'), coalesce(p_display,''),
           coalesce(p_sectors,'[]'::jsonb), coalesce(p_jurs,'[]'::jsonb), p_expires, coalesce(p_notes,''))
   returning id into new_id;
   return jsonb_build_object('ok', true, 'id', new_id);
@@ -270,7 +279,7 @@ begin
   if length(coalesce(p_new_pass,'')) < 8 then
     return jsonb_build_object('ok', false, 'error', 'La contraseña debe tener al menos 8 caracteres');
   end if;
-  update prospect_accounts set pass_enc = encode(extensions.pgp_sym_encrypt(p_new_pass, 'f5ba083d57d6c4a062bc9401c44d97560a79ad1b7a4e94c40c8af9e30d11f80a'), 'base64') where id = p_id;
+  update prospect_accounts set pass_enc = encode(extensions.pgp_sym_encrypt(p_new_pass, current_setting('app.settings.pass_enc_key')), 'base64') where id = p_id;
   if not found then return jsonb_build_object('ok', false, 'error', 'Cuenta no encontrada'); end if;
   return jsonb_build_object('ok', true);
 end $$;
@@ -285,7 +294,7 @@ begin
   select pass_enc into p_enc from prospect_accounts where id = p_id;
   if p_enc is null then return jsonb_build_object('ok', false, 'error', 'Cuenta no encontrada'); end if;
   begin
-    p_plain := extensions.pgp_sym_decrypt(decode(p_enc,'base64'), 'f5ba083d57d6c4a062bc9401c44d97560a79ad1b7a4e94c40c8af9e30d11f80a');
+    p_plain := extensions.pgp_sym_decrypt(decode(p_enc,'base64'), current_setting('app.settings.pass_enc_key'));
   exception when others then
     return jsonb_build_object('ok', false, 'error', 'No se puede mostrar (cuenta creada antes de este cambio) — reseteala una vez.');
   end;
