@@ -151,6 +151,10 @@ async function rpc(fn, args) {
 var SECTORES = ['Coyuntura general','Consumo masivo','Medios de pago','Tecnologia','Automotriz','Agroindustria','Petroquimicos','Mineria','Turismo','Salud','Ambiente'];
 var PROVINCIAS = ['CABA','Buenos Aires','Catamarca','Chaco','Chubut','Cordoba','Corrientes','Entre Rios','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquen','Rio Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucuman'];
 var JUR_ORDER = ['Nacional'].concat(PROVINCIAS).concat(['Municipal']);
+// 'Nacional' se muestra como 'Argentina' (el sync nunca publica el contenido regional de Smart
+// Snippet -- Chile/Uruguay/Paraguay -- asi que no hace falta contemplarlos aca).
+var JUR_LABEL = {'Nacional':'Argentina'};
+function jurLabel(j) { return JUR_LABEL[j] || j; }
 var SECTOR_OTRO = 'Otros', JUR_OTRA = 'Otras';
 
 var ACCOUNT = null;          // {display_name, sectors, jurs, expires_at}
@@ -393,13 +397,14 @@ function cardHTML(p, esHoy) {
     if (p.fecha) h += '<span class="pill p-fecha"><i class="ti ti-calendar" style="font-size:10px"></i> '+esc(p.fecha)+'</span>';
     if (p.num) h += '<span class="pill p-num">'+esc(p.num)+'</span>';
     if (tema) h += '<span class="pill p-tema">'+esc(tema)+'</span>';
-    if (p.jur) h += '<span class="pill p-jur">'+esc(p.jur)+'</span>';
+    if (p.jur) h += '<span class="pill p-jur">'+esc(jurLabel(p.jur))+'</span>';
     if (p.org) h += '<span class="pill p-org">'+esc(p.org)+'</span>';
     if (lx) h += '<a href="'+lx+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-link" style="font-size:11px"></i> Expediente</a>';
     if (lt) h += '<a href="'+lt+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-file-text" style="font-size:11px"></i> Texto</a>';
     h += '</div>';
     if (p.autor) h += '<div class="cautor"><i class="ti ti-user" style="font-size:12px"></i> '+esc(p.autor)+'</div>';
-    h += '<div class="cresumen">El proyecto de ley tiene por objeto '+esc(p.resumen||'')+'</div>';
+    var prefijo = (!p.tipo || p.tipo === 'proyecto_ley') ? 'El proyecto de ley tiene por objeto ' : '';
+    h += '<div class="cresumen">'+prefijo+esc(p.resumen||'')+'</div>';
   } else {
     h += '<div class="cmeta-min">';
     if (tema) h += '<span class="pill p-tema">'+esc(tema)+'</span>';

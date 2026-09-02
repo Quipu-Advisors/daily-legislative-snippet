@@ -18,6 +18,11 @@
 // Regla de oro: solo se lee la tabla `projects` interna (proyectos de ley,
 // información pública). NUNCA `selections` ni nada con clientes pagos.
 // Cada proyecto pasa por una whitelist de campos antes de publicarse.
+//
+// Monitoreo regional (2026-09): Smart Snippet sumó Chile/Uruguay/Paraguay como valores de `jur`.
+// Ese contenido NO se sincroniza a DLS por ahora (decisión de producto, no técnica) — se filtra
+// antes de publicar. Si en algún momento DLS pasa a ofrecer LatAm regional, sacar el filtro de
+// PAISES_REGIONALES de abajo y sumar el país como filtro por cuenta en admin.html.
 // ============================================================
 
 const INTERNAL_SB_URL = 'https://xyqmtqsczscdejcwusce.supabase.co';
@@ -26,19 +31,23 @@ const SYNC_DAYS = 30;
 // Deben coincidir con las constantes de la app interna y de los HTML.
 const SECTORES = ['Coyuntura general','Consumo masivo','Medios de pago','Tecnologia','Automotriz','Agroindustria','Petroquimicos','Mineria','Turismo','Salud','Ambiente'];
 const PROVINCIAS = ['CABA','Buenos Aires','Catamarca','Chaco','Chubut','Cordoba','Corrientes','Entre Rios','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquen','Rio Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucuman'];
-const JUR_ORDER = ['Nacional', ...PROVINCIAS, 'Municipal'];
+const PAISES_REGIONALES = ['Chile','Uruguay','Paraguay'];
+const JUR_ORDER = ['Nacional', ...PROVINCIAS, 'Municipal', ...PAISES_REGIONALES];
 const SECTOR_OTRO = 'Otros', JUR_OTRA = 'Otras';
+const TIPOS = ['proyecto_ley','norma','resumen_sesion'];
 
 // Campos que se publican de cada proyecto (whitelist: todo lo demás se descarta).
-const PROJ_FIELDS = ['id','num','sector','jur','tema','org','autor','title','resumen','linkExpediente','linkTexto','fecha'];
+const PROJ_FIELDS = ['id','tipo','num','sector','jur','tema','org','autor','title','resumen','linkExpediente','linkTexto','fecha'];
 
 const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 const canonSector = s => SECTORES.find(x => norm(x) === norm(s)) || SECTOR_OTRO;
 const canonJur = j => JUR_ORDER.find(x => norm(x) === norm(j)) || JUR_OTRA;
+const canonTipo = t => TIPOS.includes(t) ? t : 'proyecto_ley';
 
 function sanitizeProject(p) {
   const out = {};
   for (const f of PROJ_FIELDS) if (p[f] != null) out[f] = p[f];
+  out.tipo = canonTipo(out.tipo);
   out.sector = canonSector(out.sector);
   out.jur = canonJur(out.jur);
   return out;
@@ -97,7 +106,10 @@ export default async function handler(req, res) {
   const log = [];
   let failed = 0;
   for (const row of rows) {
-    const clean = (row.data || []).map(sanitizeProject);
+    // Regional (Chile/Uruguay/Paraguay) no se publica a DLS por ahora — ver nota arriba.
+    const clean = (row.data || [])
+      .filter(p => !PAISES_REGIONALES.includes(p && p.jur))
+      .map(sanitizeProject);
     try {
       await dlsRpc('admin_sync_projects', { p_admin: adminPass, p_date: row.date, p_data: clean });
       log.push({ date: row.date, count: clean.length, ok: true });
