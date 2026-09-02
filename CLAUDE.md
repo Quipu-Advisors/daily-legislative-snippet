@@ -152,6 +152,18 @@ por el sector/jurisdicción de su cuenta — no solo lo que el equipo marcó com
 algún cliente en Smart Snippet. Cambiar esto exigiría tocar el sync para leer `selections` sin
 exponer clientes, y no está planeado.
 
+**Tipos de ítem (2026-09):** Smart Snippet ahora publica tres tipos (`tipo`: `proyecto_ley` /
+`norma` / `resumen_sesion` — ver su `CLAUDE.md`, sección "Tipos de ítem"). Los tres llegan acá
+igual, `sanitizeProject` solo pasa el campo. `index.html` no antepone "El proyecto de ley tiene
+por objeto" salvo para `proyecto_ley`.
+
+**Monitoreo regional NO se publica acá (decisión de producto, no técnica):** Smart Snippet suma
+Chile/Uruguay/Paraguay como valores de `jur`. `api/sync.js` filtra y descarta cualquier ítem con
+esos valores antes de publicar — DLS se sigue vendiendo como monitoreo de Argentina. Si algún día
+se decide ofrecer LatAm regional a prospectos, sacar el filtro de `PAISES_REGIONALES` en
+`api/sync.js` y sumar el país como filtro por cuenta en `admin.html` (hoy solo filtra por sector
+y jurisdicción argentina).
+
 ---
 
 ## Arquitectura
