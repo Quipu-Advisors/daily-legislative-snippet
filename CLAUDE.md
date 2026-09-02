@@ -1,8 +1,7 @@
 # Daily Legislative Snippet — Guía del proyecto
 
 Vitrina **gratuita para potenciales clientes** del monitoreo legislativo de Quipu Advisors.
-Es el hermano público del **Smart Snippet** interno (repo `camila509/Snippet-digital`, pendiente
-de migrar a `Quipu-Advisors/Snippet-digital` — ver "Plan de consolidación de hosting" abajo): misma
+Es el hermano público del **Smart Snippet** interno (repo `Quipu-Advisors/Snippet-digital`): misma
 estética, pero **solo lectura**, con login por cuenta y filtros por sector/jurisdicción definidos
 desde un módulo admin, y vencimiento de acceso configurable a **cualquier fecha** (así se resuelve
 "dar el monitoreo gratis por X meses" — no hay que tocar código para eso, es un campo del admin).
@@ -11,7 +10,29 @@ desde un módulo admin, y vencimiento de acceso configurable a **cualquier fecha
 
 ---
 
-## Estado actual (actualizado 2026-08-24) — leer esto primero
+## Estado actual (actualizado 2026-09-02) — leer esto primero
+
+Deploy end-to-end funcionando, en producción, con datos reales sincronizándose desde Smart
+Snippet. Repo **privado** (pasó de público a privado el 2026-09-01 — GitHub Pages se desactivó
+solo como efecto colateral, ver [[snippet-digital]] para el motivo). Cambios recientes de fondo:
+
+- **Pipeline ampliado (2026-09-02):** el sync ahora pasa el campo `tipo` (`proyecto_ley` / `norma`
+  / `resumen_sesion`) y excluye el contenido regional (Chile/Uruguay/Paraguay) — ver sección
+  "Tipos de ítem" más abajo. `index.html` ya no antepone "El proyecto de ley tiene por objeto"
+  para ítems que no son `proyecto_ley`, y muestra "Argentina" en vez de "Nacional".
+- **`PASS_ENC_KEY` ya no está hardcodeada en `setup.sql`** — vive en la tabla `app_secrets` (RLS
+  cerrado), leída por la función `_pass_enc_key()`. Verificado funcionando (login de prospecto +
+  "Ver contraseña" desde `admin.html`, confirmado por Lucas). Si hace falta tocar esto de nuevo:
+  el primer intento con `alter database ... set app.settings...` **falló** por permisos de
+  Supabase gestionado — no repetir ese camino, usar la tabla.
+
+El detalle completo de la puesta en marcha original (Supabase, Vercel, dominio, GitHub Pages)
+queda abajo como historial — ya no hace falta releerlo para entender el estado actual, pero sirve
+si hay que retomar algo puntual de esa etapa.
+
+---
+
+## Estado en la puesta en marcha (histórico, 2026-08-24 — ya no es el estado actual)
 
 **Deploy completo y funcionando end-to-end**, salvo dominio propio (cosmético, no bloquea).
 Verificado hoy en producción (`daily-legislative-snippet.vercel.app`): login de admin confirmado
