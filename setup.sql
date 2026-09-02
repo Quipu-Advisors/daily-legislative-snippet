@@ -23,21 +23,23 @@
 create extension if not exists pgcrypto;
 
 -- Clave simétrica para cifrar/descifrar contraseñas de PROSPECTOS (reversible).
--- NO vive en este archivo (se commitea a git) — se lee de un parámetro de
--- configuración de la base (`app.settings.pass_enc_key`), leído en runtime
--- con current_setting() en _prospect_auth, admin_create_account,
+-- NO vive en este archivo (se commitea a git) — se guarda en la tabla
+-- `app_secrets` (sección 1, más abajo), RLS cerrado sin policies para anon,
+-- igual que el resto de las tablas. Se lee con la función _pass_enc_key()
+-- (sección 3), usada por _prospect_auth, admin_create_account,
 -- admin_reset_password y admin_show_password.
 --
--- >>> PASO MANUAL, UNA SOLA VEZ, en el SQL Editor de Supabase (no en este
--- archivo) <<<:
---   alter database postgres set app.settings.pass_enc_key = '<clave larga random>';
--- Después de correrlo hace falta una reconexión (Supabase → Settings →
--- Database → "Restart" del pooler, o simplemente esperar: las conexiones
--- nuevas ya la ven). Si alguna vez la cambiás, las contraseñas de prospectos
--- ya creadas dejan de poder mostrarse/verificarse (quedan a resetear).
--- Probar después: login de un prospecto existente + "Ver contraseña" desde
--- admin.html. Si current_setting() no encuentra el parámetro, las funciones
--- van a fallar (no van a devolver "contraseña incorrecta" silenciosamente).
+-- (Se probó primero con `alter database postgres set app.settings...` pero
+-- Supabase no da permiso para eso desde el SQL Editor — el rol conectado no
+-- es superusuario ahí. La tabla no tiene ese problema: mismo privilegio que
+-- crear cualquier otra tabla del setup.)
+--
+-- >>> PASO MANUAL, UNA SOLA VEZ <<<: la sección 1 más abajo ya inserta la
+-- clave — no hace falta nada aparte de correr este archivo entero. Si alguna
+-- vez la cambiás (UPDATE a mano en `app_secrets`), las contraseñas de
+-- prospectos ya creadas dejan de poder mostrarse/verificarse (quedan a
+-- resetear). Probar después: login de un prospecto existente + "Ver
+-- contraseña" desde admin.html.
 
 -- ============================================================
 -- 1. TABLAS
@@ -75,11 +77,19 @@ create table if not exists admin_settings (
   admin_hash text not null
 );
 
+-- Secretos chicos que no queremos commiteados a git (hoy: PASS_ENC_KEY). RLS
+-- cerrado igual que el resto — solo lo leen funciones SECURITY DEFINER.
+create table if not exists app_secrets (
+  key text primary key,
+  value text not null
+);
+
 -- RLS cerrado: sin policies → anon no toca nada directo.
 alter table projects_public   enable row level security;
 alter table prospect_accounts enable row level security;
 alter table admin_settings    enable row level security;
-revoke all on projects_public, prospect_accounts, admin_settings from anon, authenticated;
+alter table app_secrets       enable row level security;
+revoke all on projects_public, prospect_accounts, admin_settings, app_secrets from anon, authenticated;
 
 -- ============================================================
 -- 2. CONTRASEÑA DE ADMIN
@@ -93,6 +103,13 @@ values (1, extensions.crypt('CAMBIAME_ADMIN', extensions.gen_salt('bf')))
 on conflict (id) do update set admin_hash = excluded.admin_hash;
 
 -- (Para cambiarla más adelante, volver a correr solo este INSERT con la nueva clave.)
+
+-- Clave de cifrado reversible de contraseñas de prospectos (ver nota PASS_ENC_KEY
+-- más arriba). Cambiarla acá deja sin poder mostrarse/verificarse las cuentas
+-- ya creadas con la clave vieja (quedan a resetear una vez).
+insert into app_secrets (key, value)
+values ('pass_enc_key', 'f5ba083d57d6c4a062bc9401c44d97560a79ad1b7a4e94c40c8af9e30d11f80a')
+on conflict (key) do update set value = excluded.value;
 
 -- ============================================================
 -- 3. HELPERS INTERNOS (no expuestos)
@@ -111,6 +128,13 @@ begin
 end $$;
 revoke execute on function _require_admin(text) from public, anon, authenticated;
 
+-- Clave de cifrado de contraseñas de prospectos (ver app_secrets, sección 1).
+create or replace function _pass_enc_key()
+returns text language sql security definer set search_path = public as $$
+  select value from app_secrets where key = 'pass_enc_key';
+$$;
+revoke execute on function _pass_enc_key() from public, anon, authenticated;
+
 -- Valida credenciales de prospecto. Devuelve la cuenta o null.
 create or replace function _prospect_auth(p_user text, p_pass text)
 returns prospect_accounts language plpgsql security definer set search_path = public as $$
@@ -122,7 +146,7 @@ begin
     return null;
   end if;
   begin
-    if extensions.pgp_sym_decrypt(decode(acc.pass_enc,'base64'), current_setting('app.settings.pass_enc_key')) <> coalesce(p_pass,'') then
+    if extensions.pgp_sym_decrypt(decode(acc.pass_enc,'base64'), _pass_enc_key()) <> coalesce(p_pass,'') then
       return null;
     end if;
   exception when others then
@@ -246,7 +270,7 @@ begin
     return jsonb_build_object('ok', false, 'error', 'Ese usuario ya existe');
   end if;
   insert into prospect_accounts (username, pass_enc, display_name, sectors, jurs, expires_at, notes)
-  values (lower(trim(p_username)), encode(extensions.pgp_sym_encrypt(p_pass, current_setting('app.settings.pass_enc_key')), 'base64'), coalesce(p_display,''),
+  values (lower(trim(p_username)), encode(extensions.pgp_sym_encrypt(p_pass, _pass_enc_key()), 'base64'), coalesce(p_display,''),
           coalesce(p_sectors,'[]'::jsonb), coalesce(p_jurs,'[]'::jsonb), p_expires, coalesce(p_notes,''))
   returning id into new_id;
   return jsonb_build_object('ok', true, 'id', new_id);
@@ -279,7 +303,7 @@ begin
   if length(coalesce(p_new_pass,'')) < 8 then
     return jsonb_build_object('ok', false, 'error', 'La contraseña debe tener al menos 8 caracteres');
   end if;
-  update prospect_accounts set pass_enc = encode(extensions.pgp_sym_encrypt(p_new_pass, current_setting('app.settings.pass_enc_key')), 'base64') where id = p_id;
+  update prospect_accounts set pass_enc = encode(extensions.pgp_sym_encrypt(p_new_pass, _pass_enc_key()), 'base64') where id = p_id;
   if not found then return jsonb_build_object('ok', false, 'error', 'Cuenta no encontrada'); end if;
   return jsonb_build_object('ok', true);
 end $$;
@@ -294,7 +318,7 @@ begin
   select pass_enc into p_enc from prospect_accounts where id = p_id;
   if p_enc is null then return jsonb_build_object('ok', false, 'error', 'Cuenta no encontrada'); end if;
   begin
-    p_plain := extensions.pgp_sym_decrypt(decode(p_enc,'base64'), current_setting('app.settings.pass_enc_key'));
+    p_plain := extensions.pgp_sym_decrypt(decode(p_enc,'base64'), _pass_enc_key());
   exception when others then
     return jsonb_build_object('ok', false, 'error', 'No se puede mostrar (cuenta creada antes de este cambio) — reseteala una vez.');
   end;
