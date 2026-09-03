@@ -76,7 +76,7 @@ body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-s
 .card:not(.sel):hover .card-chev{opacity:.85}
 .cautor{font-size:12px;color:var(--text);font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:5px}
 .cautor i{color:var(--accent)}
-.cresumen{font-size:14px;color:var(--text2);line-height:1.55}
+.cresumen{font-size:14px;color:var(--text2);line-height:1.55;white-space:pre-wrap}
 .clink{font-size:11px;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:3px}
 .empty{text-align:center;padding:3rem;color:var(--text3);font-size:13px}
 .footer{padding:1.25rem 2rem;border-top:1px solid var(--border);background:var(--surface);margin-top:auto}
@@ -400,7 +400,7 @@ function cardHTML(p, esHoy) {
     if (p.jur) h += '<span class="pill p-jur">'+esc(jurLabel(p.jur))+'</span>';
     if (p.org) h += '<span class="pill p-org">'+esc(p.org)+'</span>';
     if (lx) h += '<a href="'+lx+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-link" style="font-size:11px"></i> Expediente</a>';
-    if (lt) h += '<a href="'+lt+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-file-text" style="font-size:11px"></i> Texto</a>';
+    if (lt) h += '<a href="'+lt+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-file-text" style="font-size:11px"></i> '+(p.tipo==='resumen_sesion'?'Fuente oficial':'Texto')+'</a>';
     h += '</div>';
     if (p.autor) h += '<div class="cautor"><i class="ti ti-user" style="font-size:12px"></i> '+esc(p.autor)+'</div>';
     var prefijo = (!p.tipo || p.tipo === 'proyecto_ley') ? 'El proyecto de ley tiene por objeto ' : '';

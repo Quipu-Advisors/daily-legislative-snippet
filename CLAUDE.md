@@ -176,7 +176,11 @@ exponer clientes, y no está planeado.
 **Tipos de ítem (2026-09):** Smart Snippet ahora publica tres tipos (`tipo`: `proyecto_ley` /
 `norma` / `resumen_sesion` — ver su `CLAUDE.md`, sección "Tipos de ítem"). Los tres llegan acá
 igual, `sanitizeProject` solo pasa el campo. `index.html` no antepone "El proyecto de ley tiene
-por objeto" salvo para `proyecto_ley`.
+por objeto" salvo para `proyecto_ley`, usa `white-space:pre-wrap` en `.cresumen` para no aplastar
+los párrafos de un `resumen_sesion` largo, y el link `linkTexto` dice "Fuente oficial" en vez de
+"Texto" para ese tipo (ahí es un video/registro de sesión, no un documento). **Este `index.html`
+es un codebase separado del de Smart Snippet** — cualquier arreglo de render que se haga en uno
+hay que evaluar si también aplica acá; no se sincronizan solos.
 
 **Monitoreo regional NO se publica acá (decisión de producto, no técnica):** Smart Snippet suma
 Chile/Uruguay/Paraguay como valores de `jur`. `api/sync.js` filtra y descarta cualquier ítem con
