@@ -195,7 +195,12 @@ y jurisdicción argentina).
   jurisdicciones por cuenta, vencimiento del trial, y el botón "Sincronizar ahora".
 - **`api/sync.js`** — función serverless (Vercel) que hace el sync: lee la tabla `projects`
   interna con claves en variables de entorno y publica a la base de prospectos. La dispara
-  un **cron diario a las 12:00 ART** (`vercel.json`, expresado en UTC) o el botón del admin.
+  **dos crons diarios, 13:00 y 16:00 ART** (`vercel.json`, expresado en UTC) o el botón del admin.
+  Hobby permite varios cron jobs por proyecto mientras cada uno corra ≤1 vez/día (no es "un cron
+  total") — igual no asegura el minuto exacto, cada uno puede disparar en cualquier momento
+  dentro de esa hora (±59 min, límite documentado de Vercel Hobby). `admin_sync_projects` hace
+  `upsert` por fecha (`on conflict (date) do update`), así que correrlo varias veces al día no
+  duplica nada — pisa la fila del día con el snapshot más reciente cada vez.
 - **`setup.sql`** — esquema completo de la base nueva. Se corre una vez en el SQL Editor
   de Supabase (y de nuevo si se quiere cambiar la contraseña admin).
 - **Hosting:** Vercel (estáticos + función + cron), conectado a este repo — cada push a
@@ -257,7 +262,7 @@ y jurisdicción argentina).
 | Pegar URL/clave del Supabase nuevo | `SB_URL` / `SB_ANON` al inicio del `<script>` en **ambos** HTML |
 | Cambiar el email de contacto del pie | `CONTACT_EMAIL` en `index.html` |
 | Cambiar la contraseña de admin | Re-correr el INSERT de la sección 2 de `setup.sql` **y** actualizar `DLS_ADMIN_PASS` en Vercel |
-| Cambiar la hora del cron | `schedule` en `vercel.json` (en UTC: `0 15 * * *` = 12:00 ART) |
+| Cambiar la hora del cron | array `crons` en `vercel.json` (en UTC: hoy `0 16 * * *` = 13:00 ART y `0 19 * * *` = 16:00 ART). Hobby: cada entrada ≤1 vez/día, precisión ±59 min — no más de una entrada por hora exacta. |
 | Cambiar la ventana de días | `SYNC_DAYS` en admin.html y `api/sync.js`, **y** los `30`/`45` en `setup.sql` (`prospect_projects` y `admin_sync_projects`) |
 | Agregar sectores/provincias | `SECTORES`/`PROVINCIAS` en ambos HTML y en `api/sync.js` (deben coincidir con la app interna) |
 | Texto del disclaimer / CTA | función `renderMain()` en `index.html` |
