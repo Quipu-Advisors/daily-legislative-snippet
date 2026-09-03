@@ -155,6 +155,16 @@ var JUR_ORDER = ['Nacional'].concat(PROVINCIAS).concat(['Municipal']);
 // Snippet -- Chile/Uruguay/Paraguay -- asi que no hace falta contemplarlos aca).
 var JUR_LABEL = {'Nacional':'Argentina'};
 function jurLabel(j) { return JUR_LABEL[j] || j; }
+// Igual que mapOrg del Smart Snippet: acorta organismos a un label canonico. Sin esto, el
+// organo de un resumen_sesion (lista larga de comisiones) sale como un pill gigante.
+function mapOrg(org) {
+  var l = (org||'').toLowerCase();
+  if (l.indexOf('diputados') >= 0 && l.indexOf('naci') >= 0) return 'Camara de Diputados Nacional';
+  if ((l.indexOf('senadores') >= 0 || l.indexOf('senado') >= 0) && l.indexOf('naci') >= 0) return 'Camara de Senadores Nacional';
+  if (l.indexOf('legislatura') >= 0) return 'Legislatura Provincial';
+  if (l.indexOf('diputados') >= 0) return 'Camara de Diputados Provincial';
+  return org||'';
+}
 var SECTOR_OTRO = 'Otros', JUR_OTRA = 'Otras';
 
 var ACCOUNT = null;          // {display_name, sectors, jurs, expires_at}
@@ -398,7 +408,7 @@ function cardHTML(p, esHoy) {
     if (p.num) h += '<span class="pill p-num">'+esc(p.num)+'</span>';
     if (tema) h += '<span class="pill p-tema">'+esc(tema)+'</span>';
     if (p.jur) h += '<span class="pill p-jur">'+esc(jurLabel(p.jur))+'</span>';
-    if (p.org) h += '<span class="pill p-org">'+esc(p.org)+'</span>';
+    if (p.org) h += '<span class="pill p-org">'+esc(mapOrg(p.org))+'</span>';
     if (lx) h += '<a href="'+lx+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-link" style="font-size:11px"></i> Expediente</a>';
     if (lt) h += '<a href="'+lt+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-file-text" style="font-size:11px"></i> '+(p.tipo==='resumen_sesion'?'Fuente oficial':'Texto')+'</a>';
     h += '</div>';
