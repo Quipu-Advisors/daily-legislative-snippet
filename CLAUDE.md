@@ -199,6 +199,10 @@ y jurisdicción argentina).
 
 - **`index.html`** — app del prospecto. Login (usuario+contraseña por cuenta), lista de
   proyectos de los últimos 30 días filtrada por servidor según la cuenta, solo lectura.
+- **Íconos:** Tabler Icons vía CDN, igual que Smart Snippet — mismo bug ahí también hasta
+  2026-09-04 (URL `tabler-icons/3.31.0/iconfont/...` daba 404 silencioso, ningún ícono cargaba
+  nunca; corregido a `tabler-icons/3.46.0/tabler-icons.min.css`, sin `/iconfont/`). Un `<link>`
+  roto no tira error de consola — verificar con `curl -sI <url>` antes de fijar una versión.
 - **`admin.html`** — módulo de Research: crear/editar cuentas, definir sectores y
   jurisdicciones por cuenta, vencimiento del trial, y el botón "Sincronizar ahora".
 - **`api/sync.js`** — función serverless (Vercel) que hace el sync: lee la tabla `projects`
