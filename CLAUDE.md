@@ -178,10 +178,11 @@ exponer clientes, y no está planeado.
 igual, `sanitizeProject` solo pasa el campo. `index.html` no antepone "El proyecto de ley tiene
 por objeto" salvo para `proyecto_ley`, usa `white-space:pre-wrap` en `.cresumen` para no aplastar
 los párrafos de un `resumen_sesion` largo, el link `linkTexto` dice "Fuente oficial" en vez de
-"Texto" para ese tipo (ahí es un video/registro de sesión, no un documento), y `org` pasa por
+"Texto" para ese tipo (ahí es un video/registro de sesión, no un documento), `org` pasa por
 `mapOrg()` (igual que Smart Snippet) antes de mostrarse en el pill — sin esto, el organismo de un
-`resumen_sesion` (lista larga de comisiones) sale como un pill gigante en vez de un label corto.
-**Este `index.html`
+`resumen_sesion` (lista larga de comisiones) sale como un pill gigante en vez de un label corto —
+y `tipoIconHTML(p)` antepone un ícono al título (`ti-messages`/`ti-gavel`/`ti-file-text` según
+`tipo`) para distinguir el tipo sin abrir la tarjeta. **Este `index.html`
 es un codebase separado del de Smart Snippet** — cualquier arreglo de render que se haga en uno
 hay que evaluar si también aplica acá; no se sincronizan solos.
 
