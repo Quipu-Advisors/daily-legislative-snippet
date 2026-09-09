@@ -131,6 +131,7 @@ function renderDigestHTML(items, dateIso) {
   const fecha = `${d}/${m}/${y}`;
   const n = items.length;
   return `
+<meta charset="utf-8">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F3EF;padding:24px 0">
 <tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:8px;overflow:hidden;font-family:Arial,Helvetica,sans-serif">
