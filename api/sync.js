@@ -73,6 +73,133 @@ async function dlsRpc(fn, args) {
   return t ? JSON.parse(t) : null;
 }
 
+// ============================================================
+// Resumen diario por mail (2026-09-09) — una vez por día, con lo que haya
+// para HOY (fecha ART) recién sincronizado. Mismo mail para todos los
+// destinatarios (sin personalizar por sector/jurisdicción — el que quiera
+// filtrar entra al portal). Ver admin_digest_try_claim en setup.sql para
+// el mecanismo anti-duplicado (cron corre 2 veces/día + botón manual).
+// Variables de entorno adicionales:
+//   RESEND_API_KEY     API key de Resend (resend.com)
+//   DIGEST_FROM_EMAIL  remitente verificado en Resend, ej. notificaciones@quipuadvisors.com
+// ============================================================
+
+const PORTAL_URL = 'https://monitoreolegislativo.quipuadvisors.com/';
+const TIPO_LABEL = { proyecto_ley: 'Proyecto de ley', norma: 'Norma del Boletín Oficial', resumen_sesion: 'Resumen de sesión' };
+const TIPO_COLOR = { proyecto_ley: '#395279', norma: '#C0714D', resumen_sesion: '#3B6D11' };
+
+function mapOrgShort(org) {
+  const l = String(org || '').toLowerCase();
+  if (l.includes('diputados') && l.includes('naci')) return 'Cámara de Diputados Nacional';
+  if ((l.includes('senadores') || l.includes('senado')) && l.includes('naci')) return 'Cámara de Senadores Nacional';
+  if (l.includes('legislatura')) return 'Legislatura Provincial';
+  if (l.includes('diputados')) return 'Cámara de Diputados Provincial';
+  return org || '';
+}
+
+// Argentina es UTC-3 fijo (no usa horario de verano) — evita el desfasaje de tomar
+// la fecha UTC cruda, que rotaría al día siguiente unas horas antes de medianoche ART.
+function isoTodayART() {
+  return new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function itemCardHTML(p) {
+  const tipo = canonTipo(p.tipo);
+  const label = TIPO_LABEL[tipo], color = TIPO_COLOR[tipo];
+  const resumen = String(p.resumen || '');
+  const excerpt = resumen.length > 220 ? resumen.slice(0, 220).trim() + '…' : resumen;
+  const meta = [p.sector, canonJur(p.jur) === 'Nacional' ? 'Argentina' : p.jur, mapOrgShort(p.org)].filter(Boolean).join(' · ');
+  return `
+  <tr><td style="padding:0 0 16px 0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E9E6DF;border-radius:8px">
+      <tr><td style="padding:16px">
+        <span style="display:inline-block;background:${color};color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-bottom:8px">${escHtml(label)}</span>
+        <div style="font-size:15px;font-weight:600;color:#2C2C2A;line-height:1.4;margin-bottom:4px">${escHtml(p.title || '')}</div>
+        <div style="font-size:12px;color:#888780;margin-bottom:8px">${escHtml(meta)}</div>
+        <div style="font-size:13px;color:#5F5E5A;line-height:1.5">${escHtml(excerpt)}</div>
+      </td></tr>
+    </table>
+  </td></tr>`;
+}
+
+function renderDigestHTML(items, dateIso) {
+  const [y, m, d] = dateIso.split('-');
+  const fecha = `${d}/${m}/${y}`;
+  const n = items.length;
+  return `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F3EF;padding:24px 0">
+<tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:8px;overflow:hidden;font-family:Arial,Helvetica,sans-serif">
+  <tr><td style="background:#395279;padding:20px 24px">
+    <span style="color:#FFFFFF;font-size:18px;font-weight:700">DAILY LEGISLATIVE <span style="color:#C0714D">SNIPPET</span></span>
+  </td></tr>
+  <tr><td style="padding:24px">
+    <div style="font-size:15px;color:#2C2C2A;line-height:1.6;margin-bottom:20px">
+      Hoy (${fecha}) encontramos <b>${n} novedad${n === 1 ? '' : 'es'} regulatoria${n === 1 ? '' : 's'}</b> en el monitoreo legislativo de Argentina. Un resumen abajo — para el detalle completo y filtrar por sector o jurisdicción, entrá al portal.
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items.map(itemCardHTML).join('')}</table>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px">
+      <tr><td style="background:#C0714D;border-radius:6px">
+        <a href="${PORTAL_URL}" style="display:inline-block;padding:12px 24px;color:#FFFFFF;font-size:14px;font-weight:700;text-decoration:none">Ver todo en el portal</a>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:16px 24px;background:#F4F3EF;font-size:11px;color:#888780;line-height:1.5">
+    Quipu Advisors — Daily Legislative Snippet es una muestra de cortesía del monitoreo legislativo (últimos 30 días). No constituye asesoramiento legal.<br>
+    Este resumen se manda una vez por día cuando hay novedades. Si no querés recibirlo más, respondé este mail.
+  </td></tr>
+</table>
+</td></tr>
+</table>`;
+}
+
+async function sendDigestEmail(toEmails, html, subject) {
+  const from = process.env.DIGEST_FROM_EMAIL;
+  if (!process.env.RESEND_API_KEY || !from) throw new Error('Falta RESEND_API_KEY o DIGEST_FROM_EMAIL');
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    // to: el propio remitente (visible); bcc: los prospectos reales, ocultos entre sí.
+    body: JSON.stringify({ from, to: [from], bcc: toEmails, subject, html })
+  });
+  const t = await r.text();
+  if (!r.ok) throw new Error(`Resend ${r.status}: ${t.slice(0, 200)}`);
+  return t ? JSON.parse(t) : null;
+}
+
+// Intenta mandar el resumen del día (si hay novedades, hay destinatarios, y no se mandó ya hoy).
+// Nunca tira: un fallo acá no debe romper la respuesta del sync (que ya movió los datos bien).
+async function tryDailyDigest(adminPass, rows) {
+  const todayIso = isoTodayART();
+  const todayRow = rows.find(r => r.date === todayIso);
+  const items = todayRow ? (todayRow.data || []).filter(p => !PAISES_REGIONALES.includes(p && p.jur)).map(sanitizeProject) : [];
+  if (!items.length) return { sent: false, reason: 'sin novedades hoy' };
+
+  let emails;
+  try { emails = await dlsRpc('admin_active_emails', { p_admin: adminPass }); }
+  catch (e) { return { sent: false, reason: 'no se pudo leer emails: ' + e.message }; }
+  if (!emails || !emails.length) return { sent: false, reason: 'sin destinatarios con email cargado' };
+
+  let claim;
+  try { claim = await dlsRpc('admin_digest_try_claim', { p_admin: adminPass, p_date: todayIso, p_item_count: items.length, p_recipient_count: emails.length }); }
+  catch (e) { return { sent: false, reason: 'no se pudo reservar el envío: ' + e.message }; }
+  if (!claim || !claim.ok) return { sent: false, reason: 'ya se mandó hoy' };
+
+  try {
+    const subject = `${items.length} novedad${items.length === 1 ? '' : 'es'} regulatoria${items.length === 1 ? '' : 's'} para revisar`;
+    await sendDigestEmail(emails, renderDigestHTML(items, todayIso), subject);
+    return { sent: true, item_count: items.length, recipient_count: emails.length };
+  } catch (e) {
+    // Libera la reserva para que el proximo sync del dia (cron o manual) reintente.
+    await dlsRpc('admin_digest_release', { p_admin: adminPass, p_date: todayIso }).catch(() => {});
+    return { sent: false, reason: 'fallo el envío, se reintenta en el próximo sync: ' + e.message };
+  }
+}
+
 export default async function handler(req, res) {
   // --- Autenticación: cron de Vercel o contraseña admin manual ---
   const isCron = !!process.env.CRON_SECRET &&
@@ -119,6 +246,11 @@ export default async function handler(req, res) {
     }
   }
 
-  const body = { ok: failed === 0, source: isCron ? 'cron' : 'manual', days: log.length, failed, log };
+  // --- Resumen diario por mail (best-effort, no afecta el resultado del sync) ---
+  let digest = { sent: false, reason: 'no evaluado' };
+  try { digest = await tryDailyDigest(adminPass, rows); }
+  catch (e) { digest = { sent: false, reason: 'error inesperado: ' + e.message }; }
+
+  const body = { ok: failed === 0, source: isCron ? 'cron' : 'manual', days: log.length, failed, log, digest };
   return res.status(failed ? 207 : 200).json(body);
 }

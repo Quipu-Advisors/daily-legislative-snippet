@@ -66,9 +66,21 @@ create table if not exists prospect_accounts (
   is_active boolean not null default true,
   expires_at date,                            -- null = sin vencimiento
   notes text not null default '',
+  email text not null default '',             -- para el resumen diario por mail (2026-09-09)
   created_at timestamptz not null default now(),
   last_login timestamptz,
   login_count int not null default 0
+);
+-- Migración para bases ya creadas antes del campo email (create table if not exists no lo agrega solo).
+alter table prospect_accounts add column if not exists email text not null default '';
+
+-- Un renglón por día en que se mandó el resumen por mail — evita reenviar el mismo día si el
+-- sync corre más de una vez (cron 13:00/16:00 + botón manual). Ver "admin_digest_try_claim".
+create table if not exists digest_log (
+  sent_date date primary key,
+  sent_at timestamptz not null default now(),
+  recipient_count int not null default 0,
+  item_count int not null default 0
 );
 
 -- Contraseña del módulo de administración (una sola fila).
@@ -89,7 +101,8 @@ alter table projects_public   enable row level security;
 alter table prospect_accounts enable row level security;
 alter table admin_settings    enable row level security;
 alter table app_secrets       enable row level security;
-revoke all on projects_public, prospect_accounts, admin_settings, app_secrets from anon, authenticated;
+alter table digest_log        enable row level security;
+revoke all on projects_public, prospect_accounts, admin_settings, app_secrets, digest_log from anon, authenticated;
 
 -- ============================================================
 -- 2. CONTRASEÑA DE ADMIN
@@ -238,7 +251,7 @@ begin
       select jsonb_agg(jsonb_build_object(
         'id', a.id, 'username', a.username, 'display_name', a.display_name,
         'sectors', a.sectors, 'jurs', a.jurs, 'is_active', a.is_active,
-        'expires_at', a.expires_at, 'notes', a.notes, 'created_at', a.created_at,
+        'expires_at', a.expires_at, 'notes', a.notes, 'email', a.email, 'created_at', a.created_at,
         'last_login', a.last_login, 'login_count', a.login_count
       ) order by a.created_at desc)
       from prospect_accounts a
@@ -255,7 +268,7 @@ end $$;
 -- Alta de cuenta. La contraseña se guarda cifrada de forma reversible (ver PASS_ENC_KEY).
 create or replace function admin_create_account(
   p_admin text, p_username text, p_pass text, p_display text,
-  p_sectors jsonb, p_jurs jsonb, p_expires date, p_notes text
+  p_sectors jsonb, p_jurs jsonb, p_expires date, p_notes text, p_email text default ''
 ) returns jsonb language plpgsql security definer set search_path = public as $$
 declare new_id bigint;
 begin
@@ -269,9 +282,9 @@ begin
   if exists (select 1 from prospect_accounts where lower(username) = lower(trim(p_username))) then
     return jsonb_build_object('ok', false, 'error', 'Ese usuario ya existe');
   end if;
-  insert into prospect_accounts (username, pass_enc, display_name, sectors, jurs, expires_at, notes)
+  insert into prospect_accounts (username, pass_enc, display_name, sectors, jurs, expires_at, notes, email)
   values (lower(trim(p_username)), encode(extensions.pgp_sym_encrypt(p_pass, _pass_enc_key()), 'base64'), coalesce(p_display,''),
-          coalesce(p_sectors,'[]'::jsonb), coalesce(p_jurs,'[]'::jsonb), p_expires, coalesce(p_notes,''))
+          coalesce(p_sectors,'[]'::jsonb), coalesce(p_jurs,'[]'::jsonb), p_expires, coalesce(p_notes,''), trim(coalesce(p_email,'')))
   returning id into new_id;
   return jsonb_build_object('ok', true, 'id', new_id);
 end $$;
@@ -279,7 +292,7 @@ end $$;
 -- Actualiza una cuenta (estado completo; p_expires null = sin vencimiento).
 create or replace function admin_update_account(
   p_admin text, p_id bigint, p_display text,
-  p_sectors jsonb, p_jurs jsonb, p_expires date, p_active boolean, p_notes text
+  p_sectors jsonb, p_jurs jsonb, p_expires date, p_active boolean, p_notes text, p_email text default null
 ) returns jsonb language plpgsql security definer set search_path = public as $$
 begin
   perform _require_admin(p_admin);
@@ -289,9 +302,49 @@ begin
     jurs = coalesce(p_jurs, jurs),
     expires_at = p_expires,
     is_active = coalesce(p_active, is_active),
-    notes = coalesce(p_notes, notes)
+    notes = coalesce(p_notes, notes),
+    email = coalesce(trim(p_email), email)
   where id = p_id;
   if not found then return jsonb_build_object('ok', false, 'error', 'Cuenta no encontrada'); end if;
+  return jsonb_build_object('ok', true);
+end $$;
+
+-- Emails activos para el resumen diario: cuenta activa, no vencida, con email cargado.
+create or replace function admin_active_emails(p_admin text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  perform _require_admin(p_admin);
+  return coalesce((
+    select jsonb_agg(distinct a.email)
+    from prospect_accounts a
+    where a.is_active and trim(a.email) <> ''
+      and (a.expires_at is null or a.expires_at >= current_date)
+  ), '[]'::jsonb);
+end $$;
+
+-- "Reserva" el envío del resumen de un día — atómico, para que dos disparos del sync el mismo
+-- día (cron 13:00/16:00, o el botón manual) no manden el mail dos veces. Si ya existía la fila,
+-- devuelve ok:false (no manda). Si el envío después falla, admin_digest_release libera la
+-- reserva para reintentar en el próximo sync del día.
+create or replace function admin_digest_try_claim(p_admin text, p_date date, p_item_count int, p_recipient_count int)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  perform _require_admin(p_admin);
+  insert into digest_log (sent_date, item_count, recipient_count)
+  values (p_date, coalesce(p_item_count,0), coalesce(p_recipient_count,0))
+  on conflict (sent_date) do nothing;
+  if not found then
+    return jsonb_build_object('ok', false, 'already', true);
+  end if;
+  return jsonb_build_object('ok', true);
+end $$;
+
+-- Libera la reserva de un día (el envío del mail falló) para poder reintentar más tarde.
+create or replace function admin_digest_release(p_admin text, p_date date)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  perform _require_admin(p_admin);
+  delete from digest_log where sent_date = p_date;
   return jsonb_build_object('ok', true);
 end $$;
 

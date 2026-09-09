@@ -13,8 +13,24 @@ desde un módulo admin, y vencimiento de acceso configurable a **cualquier fecha
 ## Estado actual (actualizado 2026-09-02) — leer esto primero
 
 Deploy end-to-end funcionando, en producción, con datos reales sincronizándose desde Smart
-Snippet. Repo **privado** (pasó de público a privado el 2026-09-01 — GitHub Pages se desactivó
-solo como efecto colateral, ver [[snippet-digital]] para el motivo). Cambios recientes de fondo:
+Snippet. **Repo público de nuevo desde 2026-09-04** (pasó a privado el 09-01, pero el plan Hobby
+de Vercel no deploya repos privados de una organización — quedó el deploy congelado 5 días sin que
+nadie lo notara hasta que una skill de carga nueva no se reflejaba en producción; se volvió a
+público para desbloquearlo, mismo incidente que [[snippet-digital]] — ver commit `1de645f`).
+Cambios recientes de fondo:
+
+- **Resumen diario por mail (2026-09-09):** cuando el sync encuentra novedades para el día de hoy
+  (fecha ART) y todavía no se mandó el resumen de ese día, `api/sync.js` arma un mail HTML y lo
+  manda por Resend a todas las cuentas activas con email cargado (mismo contenido para todos, sin
+  personalizar por sector/jurisdicción — el que quiere filtrar entra al portal). Una sola vez por
+  día: `admin_digest_try_claim` reserva atómicamente el envío del día en `digest_log`; si el sync
+  corre de nuevo ese mismo día (cron 13:00/16:00 + botón manual pueden solaparse), no reenvía. Si
+  el envío falla (Resend caído, etc.), `admin_digest_release` libera la reserva para reintentar en
+  el próximo sync del día. Requiere `RESEND_API_KEY` y `DIGEST_FROM_EMAIL` (env vars de Vercel,
+  **pendientes de cargar** — ver runbook que le pasé a Lucas) y que las cuentas tengan `email`
+  cargado en `admin.html` (campo nuevo, vacío por default en las cuentas viejas). Sin esas dos
+  cosas, el sync sigue funcionando igual — el digest solo queda en `sent:false` con el motivo en
+  la respuesta del endpoint, no rompe nada.
 
 - **Pipeline ampliado (2026-09-02):** el sync ahora pasa el campo `tipo` (`proyecto_ley` / `norma`
   / `resumen_sesion`) y excluye el contenido regional (Chile/Uruguay/Paraguay) — ver sección
@@ -240,6 +256,8 @@ y jurisdicción argentina).
 | `DLS_SB_URL` / `DLS_SB_ANON` | URL y clave pública del Supabase de esta app |
 | `DLS_ADMIN_PASS` | Contraseña admin (la del `setup.sql`) — la usa el cron |
 | `CRON_SECRET` | String largo aleatorio; Vercel lo manda en el header del cron |
+| `RESEND_API_KEY` | API key de [resend.com](https://resend.com) — para el resumen diario por mail |
+| `DIGEST_FROM_EMAIL` | Remitente verificado en Resend, ej. `notificaciones@quipuadvisors.com` — necesita el dominio verificado (registros DNS) en Resend, no alcanza con la clave sola |
 
 ### Modelo de seguridad (distinto del interno, a propósito)
 

@@ -273,6 +273,7 @@ function renderCuentas() {
     h += '<div class="field"><label>Usuario (para el login)</label><input type="text" id="new-user" placeholder="ej: acme"></div>';
     h += '<div class="field"><label>Empresa / contacto (se muestra en la app)</label><input type="text" id="new-display" placeholder="ej: ACME S.A."></div>';
     h += '</div>';
+    h += '<div class="field-grid full"><div class="field"><label>Email de contacto (resumen diario por mail)</label><input type="email" id="new-email" placeholder="ej: contacto@acme.com"></div></div>';
     h += '<div class="field-grid">';
     h += '<div class="field"><label>Contraseña</label><div class="inline-row"><input type="text" id="new-pass" style="flex:1;font-family:monospace" value="'+genPassword()+'"><button class="btn sm" onclick="document.getElementById(\'new-pass\').value=genPassword()"><i class="ti ti-refresh"></i></button></div></div>';
     h += '<div class="field"><label>Vencimiento del acceso</label><div class="inline-row"><input type="date" id="new-exp" value="'+isoPlusDays(30)+'" min="'+isoToday()+'"><label class="toggle"><input type="checkbox" id="new-noexp" onchange="document.getElementById(\'new-exp\').disabled=this.checked"><span class="tswitch"></span><span>Sin vencimiento</span></label></div></div>';
@@ -308,6 +309,7 @@ function accCardHTML(a) {
   h += '<span class="acc-meta">';
   h += '<span title="Último ingreso"><i class="ti ti-login-2" style="font-size:12px"></i> '+agoLabel(a.last_login)+' ('+(a.login_count||0)+')</span>';
   h += '<span>'+(a.expires_at ? 'hasta '+isoToDisplay(a.expires_at) : 'sin vencimiento')+'</span>';
+  h += '<span title="Email para el resumen diario">'+(a.email?('<i class="ti ti-mail" style="font-size:12px"></i> '+esc(a.email)):'<i class="ti ti-mail-off" style="font-size:12px;color:var(--red)"></i> sin email')+'</span>';
   h += '</span></div>';
   if (open) {
     var s = a.sectors||[], j = a.jurs||[];
@@ -316,6 +318,7 @@ function accCardHTML(a) {
     h += '<div class="field"><label>Usuario (para el login)</label><input type="text" value="'+esc(a.username)+'" disabled style="font-family:monospace;background:var(--bg);color:var(--text)"></div>';
     h += '<div class="field"><label>Empresa / contacto</label><input type="text" id="ed-display-'+a.id+'" value="'+esc(a.display_name||'')+'"></div>';
     h += '</div>';
+    h += '<div class="field-grid full"><div class="field"><label>Email de contacto (resumen diario por mail)</label><input type="email" id="ed-email-'+a.id+'" value="'+esc(a.email||'')+'" placeholder="ej: contacto@acme.com"></div></div>';
     h += '<div class="field-grid">';
     h += '<div class="field"><label>Vencimiento</label><div class="inline-row"><input type="date" id="ed-exp-'+a.id+'" value="'+esc(a.expires_at||'')+'" '+(a.expires_at?'':'disabled')+'><label class="toggle"><input type="checkbox" id="ed-noexp-'+a.id+'" '+(a.expires_at?'':'checked')+' onchange="var e=document.getElementById(\'ed-exp-'+a.id+'\');e.disabled=this.checked;if(!this.checked&&!e.value)e.value=\''+isoPlusDays(30)+'\'"><span class="tswitch"></span><span>Sin vencimiento</span></label></div></div>';
     h += '</div>';
@@ -349,7 +352,7 @@ async function createAccount() {
   if (!user) { msgIn('create-msg','error','Falta el usuario.'); return; }
   showOverlay('Creando cuenta...');
   var res;
-  try { res = await adminRpc('admin_create_account', {p_username:user, p_pass:pass, p_display:display, p_sectors:sectors, p_jurs:jurs, p_expires:exp, p_notes:(document.getElementById('new-notes').value||'').trim()}); }
+  try { res = await adminRpc('admin_create_account', {p_username:user, p_pass:pass, p_display:display, p_sectors:sectors, p_jurs:jurs, p_expires:exp, p_notes:(document.getElementById('new-notes').value||'').trim(), p_email:(document.getElementById('new-email').value||'').trim()}); }
   catch(e) { hideOverlay(); msgIn('create-msg','error','Error: '+esc(e.message)); return; }
   hideOverlay();
   if (!res.ok) { msgIn('create-msg','error',esc(res.error||'No se pudo crear.')); return; }
@@ -370,7 +373,8 @@ async function saveAccount(id) {
       p_jurs: chipsSelected('ed'+id+'-jur'),
       p_expires: exp,
       p_active: document.getElementById('ed-active-'+id).checked,
-      p_notes: (document.getElementById('ed-notes-'+id).value||'').trim()
+      p_notes: (document.getElementById('ed-notes-'+id).value||'').trim(),
+      p_email: (document.getElementById('ed-email-'+id).value||'').trim()
     });
   } catch(e) { hideOverlay(); msgIn('acc-msg-'+id,'error','Error: '+esc(e.message)); return; }
   hideOverlay();
