@@ -186,6 +186,19 @@ y `tipoIconHTML(p)` antepone un ícono al título (`ti-messages`/`ti-gavel`/`ti-
 es un codebase separado del de Smart Snippet** — cualquier arreglo de render que se haga en uno
 hay que evaluar si también aplica acá; no se sincronizan solos.
 
+**Filtro de Ámbito (2026-09-09):** portado de Smart Snippet, mismo mapeo 1 a 1 con `tipo` —
+`AMBITOS = ['Proyectos de ley', 'Alertas de sesión', 'Boletines oficiales']`, función `ambitoOf(p)`
+(acá sin `canonTipo`, que no existe en este codebase — chequea `p.tipo` directo, default
+`proyecto_ley` si falta). No está acotado por cuenta (a diferencia de Sector/Jurisdicción, que sí
+lo están vía `ACCOUNT.sectors`/`ACCOUNT.jurs`) — es una preferencia de vista, no un límite
+contractual de qué puede ver el prospecto. Implementado sobre el patrón genérico ya existente
+(`actives(cls)`/`toggleChk`/`toggleAll`/`updateBtns` con su array de config), sin funciones
+bespoke por filtro como tiene Smart Snippet — solo hubo que sumar `'amb'` a la lista de menús que
+`toggleMenu` cierra y al listener de click-afuera. `saveFilters()`/`loadSavedFilters()` guardan
+`ambitos` junto a `sectors`/`jurs`; como es una clave nueva (no un valor renombrado), no hace
+falta la salvaguarda de formato viejo que sí tiene Smart Snippet — para cualquiera sin esa clave
+guardada, `initAmbSel` cae directo en `AMBITOS.slice()` (todo tildado).
+
 **Monitoreo regional NO se publica acá (decisión de producto, no técnica):** Smart Snippet suma
 Chile/Uruguay/Paraguay como valores de `jur`. `api/sync.js` filtra y descarta cualquier ítem con
 esos valores antes de publicar — DLS se sigue vendiendo como monitoreo de Argentina. Si algún día

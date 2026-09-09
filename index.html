@@ -166,6 +166,14 @@ function tipoIconHTML(p) {
   if (p && p.tipo === 'norma') return '<i class="ti ti-gavel tipo-ico" title="Norma del Boletín Oficial"></i>';
   return '<i class="ti ti-file-text tipo-ico" title="Proyecto de ley"></i>';
 }
+// Filtro de Ámbito (2026-09-09), mismo criterio 1 a 1 con tipo que ya tiene Smart Snippet.
+var AMBITOS = ['Proyectos de ley', 'Alertas de sesión', 'Boletines oficiales'];
+function ambitoOf(p) {
+  var t = (p && p.tipo) || 'proyecto_ley';
+  if (t === 'norma') return 'Boletines oficiales';
+  if (t === 'resumen_sesion') return 'Alertas de sesión';
+  return 'Proyectos de ley';
+}
 
 function mapOrg(org) {
   var l = (org||'').toLowerCase();
@@ -183,6 +191,7 @@ var DAYS = [];               // [{date, data:[...]}] tal como los devuelve el se
 var expanded = {}, searchQ = '';
 var mySectors = [], myJurs = [];   // universo de filtros de ESTA cuenta
 var initSecSel = [], initJurSel = [];   // selección de filtros restaurada de localStorage
+var initAmbSel = [];   // ídem para Ámbito — no está acotado por cuenta (AMBITOS es fijo, no ACCOUNT.*)
 
 /* ============================================================
    UTILIDADES
@@ -219,7 +228,7 @@ function logout() { setAuth(null); ACCOUNT=null; CURRENT_USER=null; DAYS=[]; bui
 function filtersKey() { return 'dls_filters_' + (CURRENT_USER||''); }
 function loadSavedFilters() { try { return JSON.parse(localStorage.getItem(filtersKey())||'null'); } catch(e){ return null; } }
 function saveFilters() {
-  try { localStorage.setItem(filtersKey(), JSON.stringify({sectors: actives('sec-chk'), jurs: actives('jur-chk'), search: searchQ})); } catch(e){}
+  try { localStorage.setItem(filtersKey(), JSON.stringify({sectors: actives('sec-chk'), jurs: actives('jur-chk'), ambitos: actives('amb-chk'), search: searchQ})); } catch(e){}
 }
 
 /* ============================================================
@@ -278,8 +287,10 @@ async function enterApp(u, p) {
   var saved = loadSavedFilters();
   var savedSec = (saved && saved.sectors) ? saved.sectors.filter(function(s){ return mySectors.indexOf(s)>=0; }) : [];
   var savedJur = (saved && saved.jurs) ? saved.jurs.filter(function(j){ return myJurs.indexOf(j)>=0; }) : [];
+  var savedAmb = (saved && saved.ambitos) ? saved.ambitos.filter(function(a){ return AMBITOS.indexOf(a)>=0; }) : [];
   initSecSel = savedSec.length ? savedSec : mySectors.slice();
   initJurSel = savedJur.length ? savedJur : myJurs.slice();
+  initAmbSel = savedAmb.length ? savedAmb : AMBITOS.slice();
   expanded = {}; searchQ = (saved && typeof saved.search === 'string') ? saved.search : '';
   buildNav(); renderMain();
 }
@@ -297,6 +308,7 @@ async function enterPreview(adminPass) {
   myJurs = JUR_ORDER.concat([JUR_OTRA]);
   initSecSel = mySectors.slice();
   initJurSel = myJurs.slice();
+  initAmbSel = AMBITOS.slice();
   expanded = {}; searchQ = '';
   buildNav(); renderMain();
 }
@@ -322,6 +334,8 @@ function renderMain() {
   h += '<div class="dd-menu" id="dd-sec-menu"><div class="dd-item" onclick="toggleAll(\'sec\',event)"><input type="checkbox" id="chk-all-sec" checked> Todos</div><hr class="dd-divider"><div id="sec-items"></div></div></div>';
   h += '<label>Jurisdicción</label><div class="dd-wrap"><button class="dd-btn" id="dd-jur-btn" onclick="toggleMenu(\'jur\',event)">Todas</button>';
   h += '<div class="dd-menu" id="dd-jur-menu"><div class="dd-item" onclick="toggleAll(\'jur\',event)"><input type="checkbox" id="chk-all-jur" checked> Todas</div><hr class="dd-divider"><div id="jur-items"></div></div></div>';
+  h += '<label>Ámbito</label><div class="dd-wrap"><button class="dd-btn" id="dd-amb-btn" onclick="toggleMenu(\'amb\',event)">Todos</button>';
+  h += '<div class="dd-menu" id="dd-amb-menu"><div class="dd-item" onclick="toggleAll(\'amb\',event)"><input type="checkbox" id="chk-all-amb" checked> Todos</div><hr class="dd-divider"><div id="amb-items"></div></div></div>';
   h += '</div>';
   h += '<div class="list" id="list"></div>';
   h += '<div class="footer"><div class="footer-inner">';
@@ -337,10 +351,12 @@ function buildFilters() {
   if (si) si.innerHTML = mySectors.map(function(s){ var on = initSecSel.indexOf(s)>=0; return '<div class="dd-item" onclick="toggleChk(this,event)"><input type="checkbox" class="sec-chk" value="'+esc(s)+'"'+(on?' checked':'')+'> '+esc(s)+'</div>'; }).join('');
   var ji = document.getElementById('jur-items');
   if (ji) ji.innerHTML = myJurs.map(function(j){ var on = initJurSel.indexOf(j)>=0; return '<div class="dd-item" onclick="toggleChk(this,event)"><input type="checkbox" class="jur-chk" value="'+esc(j)+'"'+(on?' checked':'')+'> '+esc(j)+'</div>'; }).join('');
+  var ai = document.getElementById('amb-items');
+  if (ai) ai.innerHTML = AMBITOS.map(function(a){ var on = initAmbSel.indexOf(a)>=0; return '<div class="dd-item" onclick="toggleChk(this,event)"><input type="checkbox" class="amb-chk" value="'+esc(a)+'"'+(on?' checked':'')+'> '+esc(a)+'</div>'; }).join('');
   updateBtns();
 }
 function setSearch(v) { searchQ = v||''; saveFilters(); renderList(); }
-function toggleMenu(type,e) { e.stopPropagation(); var id='dd-'+type+'-menu', other=type==='sec'?'dd-jur-menu':'dd-sec-menu'; document.getElementById(other).classList.remove('open'); document.getElementById(id).classList.toggle('open'); }
+function toggleMenu(type,e) { e.stopPropagation(); var id='dd-'+type+'-menu'; ['sec','jur','amb'].forEach(function(t){ if(t!==type){ var m=document.getElementById('dd-'+t+'-menu'); if(m) m.classList.remove('open'); } }); document.getElementById(id).classList.toggle('open'); }
 function toggleChk(row,e) { e.stopPropagation(); var chk=row.querySelector('input'); if(e.target!==chk)chk.checked=!chk.checked; updateBtns(); saveFilters(); renderList(); }
 function toggleAll(type,e) {
   e.stopPropagation();
@@ -350,7 +366,7 @@ function toggleAll(type,e) {
 }
 function actives(cls) { return Array.from(document.querySelectorAll('.'+cls+':checked')).map(function(c){return c.value;}); }
 function updateBtns() {
-  [['sec','Todos','Ninguno','sectores'],['jur','Todas','Ninguna','jurisdicciones']].forEach(function(cfg){
+  [['sec','Todos','Ninguno','sectores'],['jur','Todas','Ninguna','jurisdicciones'],['amb','Todos','Ninguno','ámbitos']].forEach(function(cfg){
     var a=actives(cfg[0]+'-chk'), total=document.querySelectorAll('.'+cfg[0]+'-chk').length;
     var btn=document.getElementById('dd-'+cfg[0]+'-btn'), ac=document.getElementById('chk-all-'+cfg[0]);
     if(!btn)return;
@@ -360,13 +376,13 @@ function updateBtns() {
     else{btn.textContent=a.length+' '+cfg[3];ac.checked=false;ac.indeterminate=true;}
   });
 }
-document.addEventListener('click', function(){ ['dd-sec-menu','dd-jur-menu'].forEach(function(id){ var m=document.getElementById(id); if(m)m.classList.remove('open'); }); });
+document.addEventListener('click', function(){ ['dd-sec-menu','dd-jur-menu','dd-amb-menu'].forEach(function(id){ var m=document.getElementById(id); if(m)m.classList.remove('open'); }); });
 
 function allSecSelected() { return actives('sec-chk').length === document.querySelectorAll('.sec-chk').length; }
 
 function renderList() {
   var list = document.getElementById('list'); if (!list) return;
-  var aS = actives('sec-chk'), aJ = actives('jur-chk');
+  var aS = actives('sec-chk'), aJ = actives('jur-chk'), aA = actives('amb-chk');
   var q = norm(searchQ);
   var today = isoToday();
   var any = false, h = '';
@@ -374,7 +390,7 @@ function renderList() {
   var JUR_FULL = JUR_ORDER.concat([JUR_OTRA]);
   DAYS.forEach(function(day) {
     var ps = (day.data||[]).filter(function(p){
-      if (aS.indexOf(p.sector)<0 || aJ.indexOf(p.jur)<0) return false;
+      if (aS.indexOf(p.sector)<0 || aJ.indexOf(p.jur)<0 || aA.indexOf(ambitoOf(p))<0) return false;
       if (q && norm((p.title||'')+' '+(p.num||'')+' '+(p.resumen||'')+' '+(p.autor||'')+' '+(p.tema||'')+' '+(p.org||'')).indexOf(q)<0) return false;
       return true;
     });
