@@ -85,17 +85,6 @@ async function dlsRpc(fn, args) {
 // ============================================================
 
 const PORTAL_URL = 'https://monitoreolegislativo.quipuadvisors.com/';
-const TIPO_LABEL = { proyecto_ley: 'Proyecto de ley', norma: 'Norma del Boletín Oficial', resumen_sesion: 'Resumen de sesión' };
-const TIPO_COLOR = { proyecto_ley: '#395279', norma: '#C0714D', resumen_sesion: '#3B6D11' };
-
-function mapOrgShort(org) {
-  const l = String(org || '').toLowerCase();
-  if (l.includes('diputados') && l.includes('naci')) return 'Cámara de Diputados Nacional';
-  if ((l.includes('senadores') || l.includes('senado')) && l.includes('naci')) return 'Cámara de Senadores Nacional';
-  if (l.includes('legislatura')) return 'Legislatura Provincial';
-  if (l.includes('diputados')) return 'Cámara de Diputados Provincial';
-  return org || '';
-}
 
 // Argentina es UTC-3 fijo (no usa horario de verano) — evita el desfasaje de tomar
 // la fecha UTC cruda, que rotaría al día siguiente unas horas antes de medianoche ART.
@@ -103,33 +92,9 @@ function isoTodayART() {
   return new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
-function escHtml(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-function itemCardHTML(p) {
-  const tipo = canonTipo(p.tipo);
-  const label = TIPO_LABEL[tipo], color = TIPO_COLOR[tipo];
-  const resumen = String(p.resumen || '');
-  const excerpt = resumen.length > 220 ? resumen.slice(0, 220).trim() + '…' : resumen;
-  const meta = [p.sector, canonJur(p.jur) === 'Nacional' ? 'Argentina' : p.jur, mapOrgShort(p.org)].filter(Boolean).join(' · ');
-  return `
-  <tr><td style="padding:0 0 16px 0">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E9E6DF;border-radius:8px">
-      <tr><td style="padding:16px">
-        <span style="display:inline-block;background:${color};color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-bottom:8px">${escHtml(label)}</span>
-        <div style="font-size:15px;font-weight:600;color:#2C2C2A;line-height:1.4;margin-bottom:4px">${escHtml(p.title || '')}</div>
-        <div style="font-size:12px;color:#888780;margin-bottom:8px">${escHtml(meta)}</div>
-        <div style="font-size:13px;color:#5F5E5A;line-height:1.5">${escHtml(excerpt)}</div>
-      </td></tr>
-    </table>
-  </td></tr>`;
-}
-
-function renderDigestHTML(items, dateIso) {
-  const [y, m, d] = dateIso.split('-');
-  const fecha = `${d}/${m}/${y}`;
-  const n = items.length;
+// Aviso sin contenido: solo el conteo y el link al portal — quien quiera el detalle entra ahí.
+function renderDigestHTML(itemCount) {
+  const n = itemCount;
   return `
 <meta charset="utf-8">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F3EF;padding:24px 0">
@@ -140,12 +105,11 @@ function renderDigestHTML(items, dateIso) {
   </td></tr>
   <tr><td style="padding:24px">
     <div style="font-size:15px;color:#2C2C2A;line-height:1.6;margin-bottom:20px">
-      Hoy (${fecha}) encontramos <b>${n} novedad${n === 1 ? '' : 'es'} regulatoria${n === 1 ? '' : 's'}</b> en el monitoreo legislativo de Argentina. Un resumen abajo — para el detalle completo y filtrar por sector o jurisdicción, entrá al portal.
+      Hay <b>${n} novedad${n === 1 ? '' : 'es'} regulatoria${n === 1 ? '' : 's'}</b> que podrían interesarte.
     </div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items.map(itemCardHTML).join('')}</table>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px">
+    <table role="presentation" cellpadding="0" cellspacing="0">
       <tr><td style="background:#C0714D;border-radius:6px">
-        <a href="${PORTAL_URL}" style="display:inline-block;padding:12px 24px;color:#FFFFFF;font-size:14px;font-weight:700;text-decoration:none">Ver todo en el portal</a>
+        <a href="${PORTAL_URL}" style="display:inline-block;padding:12px 24px;color:#FFFFFF;font-size:14px;font-weight:700;text-decoration:none">Ver en el portal</a>
       </td></tr>
     </table>
   </td></tr>
@@ -192,7 +156,7 @@ async function tryDailyDigest(adminPass, rows) {
 
   try {
     const subject = `${items.length} novedad${items.length === 1 ? '' : 'es'} regulatoria${items.length === 1 ? '' : 's'} para revisar`;
-    await sendDigestEmail(emails, renderDigestHTML(items, todayIso), subject);
+    await sendDigestEmail(emails, renderDigestHTML(items.length), subject);
     return { sent: true, item_count: items.length, recipient_count: emails.length };
   } catch (e) {
     // Libera la reserva para que el proximo sync del dia (cron o manual) reintente.
