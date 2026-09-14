@@ -19,18 +19,22 @@ nadie lo notara hasta que una skill de carga nueva no se reflejaba en producció
 público para desbloquearlo, mismo incidente que [[snippet-digital]] — ver commit `1de645f`).
 Cambios recientes de fondo:
 
-- **Resumen diario por mail (2026-09-09):** cuando el sync encuentra novedades para el día de hoy
-  (fecha ART) y todavía no se mandó el resumen de ese día, `api/sync.js` arma un mail HTML y lo
-  manda por Resend a todas las cuentas activas con email cargado (mismo contenido para todos, sin
-  personalizar por sector/jurisdicción — el que quiere filtrar entra al portal). Una sola vez por
+- **Resumen diario por mail (2026-09-09, contenido simplificado 2026-09-14):** cuando el sync
+  encuentra novedades para el día de hoy (fecha ART) y todavía no se mandó el resumen de ese día,
+  `api/sync.js` arma un mail HTML y lo manda por Resend a todas las cuentas activas con email
+  cargado (mismo mail para todos). **El mail no lleva detalle de contenido** — decisión explícita
+  de Lucas (2026-09-14): una sola línea ("Hay N novedades regulatorias que podrían interesarte")
+  + botón al portal; quien quiere el detalle o filtrar por sector/jurisdicción entra ahí
+  (`renderDigestHTML(itemCount)` en `api/sync.js`, ya no arma tarjetas por ítem). Una sola vez por
   día: `admin_digest_try_claim` reserva atómicamente el envío del día en `digest_log`; si el sync
-  corre de nuevo ese mismo día (cron 13:00/16:00 + botón manual pueden solaparse), no reenvía. Si
-  el envío falla (Resend caído, etc.), `admin_digest_release` libera la reserva para reintentar en
-  el próximo sync del día. Requiere `RESEND_API_KEY` y `DIGEST_FROM_EMAIL` (env vars de Vercel,
-  **pendientes de cargar** — ver runbook que le pasé a Lucas) y que las cuentas tengan `email`
-  cargado en `admin.html` (campo nuevo, vacío por default en las cuentas viejas). Sin esas dos
-  cosas, el sync sigue funcionando igual — el digest solo queda en `sent:false` con el motivo en
-  la respuesta del endpoint, no rompe nada.
+  corre de nuevo ese mismo día (cron 13:00/16:00 + botón manual pueden solaparse), no reenvía —
+  esto se mantiene igual aunque el contenido se simplificó (decisión explícita: seguir en 1x/día,
+  no en cada sync). Si el envío falla (Resend caído, etc.), `admin_digest_release` libera la
+  reserva para reintentar en el próximo sync del día. Requiere `RESEND_API_KEY` y
+  `DIGEST_FROM_EMAIL` (env vars, **pendientes de cargar** — ver runbook que le pasé a Lucas) y que
+  las cuentas tengan `email` cargado en `admin.html` (campo nuevo, vacío por default en las
+  cuentas viejas). Sin esas dos cosas, el sync sigue funcionando igual — el digest solo queda en
+  `sent:false` con el motivo en la respuesta del endpoint, no rompe nada.
 
 - **Pipeline ampliado (2026-09-02):** el sync ahora pasa el campo `tipo` (`proyecto_ley` / `norma`
   / `resumen_sesion`) y excluye el contenido regional (Chile/Uruguay/Paraguay) — ver sección
