@@ -3,17 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Legislative Snippet — Quipu Advisors</title>
+<title>Daily Snippet — Quipu Advisors</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.46.0/tabler-icons.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#F4F3EF;--surface:#FFFFFF;--border:#DDD9D2;--border-light:#E9E6DF;--text:#2C2C2A;--text2:#5F5E5A;--text3:#888780;--blue:#395279;--blue-bg:#E8EEF5;--blue-dark:#2D4060;--accent:#C0714D;--accent-bg:#FDF5F0;--accent-border:#E8C4A8;--green-bg:#EAF3DE;--green:#3B6D11;--green-border:#639922;--red-bg:#FCEBEB;--red:#791F1F;--red-border:#F09595;--radius:6px;--radius-lg:8px;}
 body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
-.nav{display:flex;align-items:center;background:var(--blue);border-bottom:2px solid var(--accent);padding:0 1.25rem;height:48px;flex-wrap:wrap}
-.nav-logo{font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:7px;color:#fff}
+.nav{display:flex;align-items:center;background:var(--blue);border-bottom:2px solid var(--accent);padding:9px 1.25rem;min-height:48px;flex-wrap:wrap;gap:10px}
+.nav-logo-img{height:26px;width:auto;flex-shrink:0;align-self:flex-end;margin-bottom:2px}
+.nav-brand{display:flex;flex-direction:column;gap:1px}
+.nav-logo{font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;line-height:1.1;color:#fff}
 .nav-logo span{color:var(--accent)}
-.nav-sub{font-size:10px;color:#A8BCD4;font-weight:400;letter-spacing:.06em;text-transform:uppercase;margin-left:12px}
+.nav-sub{font-size:11px;color:#A8BCD4;font-weight:400;line-height:1.2}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:14px}
 .nav-exp{font-size:11px;color:#A8BCD4;font-weight:300}
 .nav-user{display:flex;align-items:center;gap:6px;font-size:12px;color:#E8EEF5;font-weight:600}
@@ -41,6 +43,10 @@ body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-s
 .tb-search i{color:var(--text3);font-size:15px;flex-shrink:0}
 .tb-search input{border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;color:var(--text);width:220px;max-width:40vw}
 .dd-wrap{position:relative}
+.amb-group{display:flex;gap:8px;flex-wrap:wrap}
+.amb-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;height:30px;padding:0 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;user-select:none;transition:background .12s,color .12s,border-color .12s}
+.amb-btn:hover{border-color:var(--accent-border)}
+.amb-btn:has(.amb-chk:checked){background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);font-weight:600}
 .dd-btn{font-size:13px;height:30px;padding:0 28px 0 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;min-width:140px;text-align:left;position:relative;font-family:inherit}
 .dd-btn::after{content:'';position:absolute;right:10px;top:50%;transform:translateY(-50%);border:4px solid transparent;border-top-color:var(--text3);margin-top:2px}
 .dd-menu{display:none;position:absolute;top:34px;left:0;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);min-width:200px;padding:4px 0;box-shadow:0 4px 12px rgba(0,0,0,.08);max-height:320px;overflow-y:auto}
@@ -53,32 +59,33 @@ body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-s
 .date-hdr{font-size:14px;font-weight:600;color:var(--text);padding:10px 0 8px;border-bottom:2px solid var(--blue);margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .date-hdr i{color:var(--blue);font-size:16px}
 .hoy-nuevos{color:var(--accent);font-weight:700;font-size:13px;margin-left:auto}
-.group-sector-title{font-size:13px;font-weight:700;color:var(--text);padding:14px 0 8px;margin-bottom:6px}
-.group-jur-title{font-size:9px;font-weight:700;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;padding:6px 0 4px;margin-top:4px}
+.group-sector-title{font-size:17px;font-weight:700;color:var(--text);padding:14px 0 8px;margin-bottom:6px}
+.group-jur-title{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;padding:6px 0 4px;margin-top:4px}
 .group-jur-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
-.card{position:relative;border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;background:var(--surface);cursor:pointer;display:flex;gap:14px;align-items:flex-start;transition:border-color .12s,box-shadow .12s}
+.card{position:relative;border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;background:var(--surface);cursor:pointer;display:flex;flex-direction:column;transition:border-color .12s,box-shadow .12s}
 .card:not(.sel):hover{border-color:var(--accent-border);box-shadow:0 1px 6px rgba(57,82,121,.06)}
 .card.sel{border:1.5px solid var(--blue);box-shadow:0 2px 10px rgba(57,82,121,.08)}
-.card.sel .ctitle{color:var(--blue);margin-bottom:8px}
-.card.nuevo{border-left:3px solid var(--accent)}
+.card.sel .ctitle{color:var(--blue)}
 .card-nuevo{position:absolute;top:0;right:0;background:var(--accent);color:#fff;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:0 8px 0 8px}
-.cinfo{flex:1;min-width:0}
-.ctitle{font-size:16px;font-weight:600;line-height:1.4}
-.tipo-ico{font-size:14px;color:var(--accent);margin-right:5px;vertical-align:-1px}
+.ctipo-label{font-size:12px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.ctitle{font-size:19px;font-weight:700;line-height:1.4;display:flex;align-items:center;gap:6px}
 .cmeta-min{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
-.cmeta{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px;align-items:center}
 .pill{font-size:11px;padding:2px 7px;border-radius:var(--radius);font-weight:500}
-.p-num{background:#F1EFE8;color:#5F5E5A;font-weight:600}
-.p-org{background:#F1EFE8;color:#5F5E5A;font-weight:400}
-.p-fecha{background:var(--bg);color:var(--text2);font-weight:400}
 .p-tema{background:var(--blue-bg);color:var(--blue);border:0.5px solid #C3D2E6}
-.p-jur{background:var(--accent-bg);color:var(--accent);border:0.5px solid var(--accent-border)}
-.card-chev{margin-left:auto;align-self:center;color:var(--text3);opacity:.4;font-size:18px;flex-shrink:0;transition:opacity .12s}
+.cbody{display:flex;margin-top:14px;align-items:flex-start}
+.cmain{flex:1;min-width:0;padding-left:22px;padding-right:28px}
+.cmeta-col{flex:0 0 208px;display:flex;flex-direction:column;gap:6px;padding-right:22px;border-right:1px solid var(--border-light)}
+.mrow{font-size:13px;color:var(--text3);line-height:1.35;display:flex;align-items:center;gap:5px}
+.mrow i{font-size:10px;flex-shrink:0}
+.m-tipo{color:var(--text2);font-weight:600}
+.m-num{color:var(--text2);font-weight:600}
+.m-jur{color:var(--accent);font-weight:600}
+.card-chev{margin-left:auto;color:var(--text3);opacity:.4;font-size:18px;flex-shrink:0;transition:opacity .12s}
 .card:not(.sel):hover .card-chev{opacity:.85}
 .cautor{font-size:12px;color:var(--text);font-weight:700;margin:0 0 8px;display:flex;align-items:center;gap:5px}
 .cautor i{color:var(--accent)}
-.cresumen{font-size:14px;color:var(--text2);line-height:1.55;white-space:pre-wrap}
-.clink{font-size:11px;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:3px}
+.cresumen{font-size:14px;color:var(--text);line-height:1.6;white-space:pre-wrap}
+.clink{font-size:11.5px;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px}
 .empty{text-align:center;padding:3rem;color:var(--text3);font-size:13px}
 .footer{padding:1.25rem 2rem;border-top:1px solid var(--border);background:var(--surface);margin-top:auto}
 .footer-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
@@ -107,6 +114,10 @@ body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-s
   .login-wrap{padding:1rem}
   .login-card{padding:1.75rem 1.5rem}
   .card{padding:14px}
+  .cbody{flex-direction:column}
+  .cmeta-col{flex-direction:row;flex-wrap:wrap;column-gap:12px;row-gap:2px;width:100%;padding-right:0;padding-bottom:10px;border-right:0;border-bottom:1px solid var(--border-light)}
+  .cmeta-col .mrow{line-height:1.15}
+  .cmain{padding-left:0;padding-right:0;margin-top:12px}
   .footer{padding:1rem}
 }
 </style>
@@ -116,8 +127,11 @@ body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-s
   <div class="overlay-box"><i class="ti ti-loader-2 spin"></i><p id="overlay-msg">Cargando...</p></div>
 </div>
 <nav class="nav">
-  <div class="nav-logo"><i class="ti ti-news" style="color:var(--accent)"></i> Daily Legislative <span>Snippet</span></div>
-  <span class="nav-sub">by Quipu Advisors</span>
+  <img src="quipu-mark.png" alt="Quipu" class="nav-logo-img">
+  <div class="nav-brand">
+    <div class="nav-logo">DAILY <span>SNIPPET</span></div>
+    <div class="nav-sub">Novedades regulatorias y legislativas diarias</div>
+  </div>
   <div class="nav-right" id="nav-right"></div>
 </nav>
 <div id="app"></div>
@@ -152,6 +166,7 @@ async function rpc(fn, args) {
 var SECTORES = ['Coyuntura general','Consumo masivo','Medios de pago','Tecnologia','Automotriz','Agroindustria','Petroquimicos','Mineria','Turismo','Salud','Ambiente'];
 var PROVINCIAS = ['CABA','Buenos Aires','Catamarca','Chaco','Chubut','Cordoba','Corrientes','Entre Rios','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquen','Rio Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucuman'];
 var JUR_ORDER = ['Nacional'].concat(PROVINCIAS).concat(['Municipal']);
+
 // 'Nacional' se muestra como 'Argentina' (el sync nunca publica el contenido regional de Smart
 // Snippet -- Chile/Uruguay/Paraguay -- asi que no hace falta contemplarlos aca).
 var JUR_LABEL = {'Nacional':'Argentina'};
@@ -166,6 +181,11 @@ function tipoIconHTML(p) {
   if (p && p.tipo === 'norma') return '<i class="ti ti-gavel tipo-ico" title="Norma del Boletín Oficial"></i>';
   return '<i class="ti ti-file-text tipo-ico" title="Proyecto de ley"></i>';
 }
+function tipoMeta(p) {
+  if (p && p.tipo === 'resumen_sesion') return {icon:'ti-messages', label:'Resumen de sesión'};
+  if (p && p.tipo === 'norma') return {icon:'ti-gavel', label:'Norma del Boletín Oficial'};
+  return {icon:'ti-file-text', label:'Proyecto de ley'};
+}
 // Filtro de Ámbito (2026-09-09), mismo criterio 1 a 1 con tipo que ya tiene Smart Snippet.
 var AMBITOS = ['Proyectos de ley', 'Alertas de sesión', 'Boletines oficiales'];
 function ambitoOf(p) {
@@ -173,6 +193,11 @@ function ambitoOf(p) {
   if (t === 'norma') return 'Boletines oficiales';
   if (t === 'resumen_sesion') return 'Alertas de sesión';
   return 'Proyectos de ley';
+}
+function ambitoIcon(a) {
+  if (a === 'Boletines oficiales') return 'ti-gavel';
+  if (a === 'Alertas de sesión') return 'ti-messages';
+  return 'ti-file-text';
 }
 
 function mapOrg(org) {
@@ -238,7 +263,7 @@ function renderLogin(msg) {
   buildNav();
   var h = '<div class="login-wrap"><div class="login-card">';
   h += '<div class="login-by">Quipu Advisors</div>';
-  h += '<div class="login-brand">Daily Legislative <span>Snippet</span></div>';
+  h += '<div class="login-brand">Daily <span>Snippet</span></div>';
   h += '<div class="login-sub">Monitoreo legislativo diario — Argentina, nacional y provincias.</div>';
   h += '<div class="login-err'+(msg?' show':'')+'" id="login-err">'+esc(msg||'')+'</div>';
   h += '<input type="text" class="gate-input" id="lg-user" placeholder="Usuario" autocomplete="username">';
@@ -334,13 +359,12 @@ function renderMain() {
   h += '<div class="dd-menu" id="dd-sec-menu"><div class="dd-item" onclick="toggleAll(\'sec\',event)"><input type="checkbox" id="chk-all-sec" checked> Todos</div><hr class="dd-divider"><div id="sec-items"></div></div></div>';
   h += '<label>Jurisdicción</label><div class="dd-wrap"><button class="dd-btn" id="dd-jur-btn" onclick="toggleMenu(\'jur\',event)">Todas</button>';
   h += '<div class="dd-menu" id="dd-jur-menu"><div class="dd-item" onclick="toggleAll(\'jur\',event)"><input type="checkbox" id="chk-all-jur" checked> Todas</div><hr class="dd-divider"><div id="jur-items"></div></div></div>';
-  h += '<label>Ámbito</label><div class="dd-wrap"><button class="dd-btn" id="dd-amb-btn" onclick="toggleMenu(\'amb\',event)">Todos</button>';
-  h += '<div class="dd-menu" id="dd-amb-menu"><div class="dd-item" onclick="toggleAll(\'amb\',event)"><input type="checkbox" id="chk-all-amb" checked> Todos</div><hr class="dd-divider"><div id="amb-items"></div></div></div>';
+  h += '<label>Ámbito</label><div class="amb-group" id="amb-items"></div>';
   h += '</div>';
   h += '<div class="list" id="list"></div>';
   h += '<div class="footer"><div class="footer-inner">';
-  h += '<div class="footer-txt"><b>Daily Legislative Snippet</b> es una muestra de cortesía del monitoreo legislativo de <b>Quipu Advisors</b> (últimos 30 días). No constituye asesoramiento legal. La versión completa incluye histórico, análisis de impacto por industria y alertas personalizadas.</div>';
-  h += '<a class="footer-cta" href="mailto:'+esc(CONTACT_EMAIL)+'?subject='+encodeURIComponent('Daily Legislative Snippet — versión completa')+'"><i class="ti ti-mail"></i> Quiero la versión completa</a>';
+  h += '<div class="footer-txt"><b>Daily Snippet</b> es una muestra de cortesía del monitoreo legislativo de <b>Quipu Advisors</b> (últimos 30 días). No constituye asesoramiento legal. La versión completa incluye histórico, análisis de impacto por industria y alertas personalizadas.</div>';
+  h += '<a class="footer-cta" href="mailto:'+esc(CONTACT_EMAIL)+'?subject='+encodeURIComponent('Daily Snippet — versión completa')+'"><i class="ti ti-mail"></i> Quiero la versión completa</a>';
   h += '</div></div>';
   document.getElementById('app').innerHTML = h;
   buildFilters(); renderList();
@@ -352,11 +376,11 @@ function buildFilters() {
   var ji = document.getElementById('jur-items');
   if (ji) ji.innerHTML = myJurs.map(function(j){ var on = initJurSel.indexOf(j)>=0; return '<div class="dd-item" onclick="toggleChk(this,event)"><input type="checkbox" class="jur-chk" value="'+esc(j)+'"'+(on?' checked':'')+'> '+esc(j)+'</div>'; }).join('');
   var ai = document.getElementById('amb-items');
-  if (ai) ai.innerHTML = AMBITOS.map(function(a){ var on = initAmbSel.indexOf(a)>=0; return '<div class="dd-item" onclick="toggleChk(this,event)"><input type="checkbox" class="amb-chk" value="'+esc(a)+'"'+(on?' checked':'')+'> '+esc(a)+'</div>'; }).join('');
+  if (ai) ai.innerHTML = AMBITOS.map(function(a){ var on = initAmbSel.indexOf(a)>=0; return '<div class="amb-btn" onclick="toggleChk(this,event)"><input type="checkbox" class="amb-chk" value="'+esc(a)+'"'+(on?' checked':'')+' hidden><i class="ti '+ambitoIcon(a)+'"></i>'+esc(a)+'</div>'; }).join('');
   updateBtns();
 }
 function setSearch(v) { searchQ = v||''; saveFilters(); renderList(); }
-function toggleMenu(type,e) { e.stopPropagation(); var id='dd-'+type+'-menu'; ['sec','jur','amb'].forEach(function(t){ if(t!==type){ var m=document.getElementById('dd-'+t+'-menu'); if(m) m.classList.remove('open'); } }); document.getElementById(id).classList.toggle('open'); }
+function toggleMenu(type,e) { e.stopPropagation(); var id='dd-'+type+'-menu'; ['sec','jur'].forEach(function(t){ if(t!==type){ var m=document.getElementById('dd-'+t+'-menu'); if(m) m.classList.remove('open'); } }); document.getElementById(id).classList.toggle('open'); }
 function toggleChk(row,e) { e.stopPropagation(); var chk=row.querySelector('input'); if(e.target!==chk)chk.checked=!chk.checked; updateBtns(); saveFilters(); renderList(); }
 function toggleAll(type,e) {
   e.stopPropagation();
@@ -366,7 +390,7 @@ function toggleAll(type,e) {
 }
 function actives(cls) { return Array.from(document.querySelectorAll('.'+cls+':checked')).map(function(c){return c.value;}); }
 function updateBtns() {
-  [['sec','Todos','Ninguno','sectores'],['jur','Todas','Ninguna','jurisdicciones'],['amb','Todos','Ninguno','ámbitos']].forEach(function(cfg){
+  [['sec','Todos','Ninguno','sectores'],['jur','Todas','Ninguna','jurisdicciones']].forEach(function(cfg){
     var a=actives(cfg[0]+'-chk'), total=document.querySelectorAll('.'+cfg[0]+'-chk').length;
     var btn=document.getElementById('dd-'+cfg[0]+'-btn'), ac=document.getElementById('chk-all-'+cfg[0]);
     if(!btn)return;
@@ -399,7 +423,7 @@ function renderList() {
     var esHoy = day.date === today;
     h += '<div style="margin-bottom:1.5rem">';
     h += '<div class="date-hdr"><i class="ti ti-calendar"></i>Reportados el '+esc(fechaLabel(day.date));
-    if (esHoy) h += '<span class="hoy-nuevos">'+ps.length+' proyecto'+(ps.length!==1?'s':'')+' nuevo'+(ps.length!==1?'s':'')+'</span>';
+    if (esHoy) h += '<span class="hoy-nuevos">'+ps.length+' novedad'+(ps.length!==1?'es':'')+'</span>';
     h += '</div>';
     if (allSecSelected()) {
       SEC_ORDER.forEach(function(sec) {
@@ -424,30 +448,33 @@ function cardHTML(p, esHoy) {
   var isExp = !!expanded[id];
   var lx = safeUrl(p.linkExpediente), lt = safeUrl(p.linkTexto);
   var tema = (p.tema && norm(p.tema)!=='otro') ? p.tema : '';
+  var tm = tipoMeta(p);
   var h = '<div class="card'+(isExp?' sel':'')+(esHoy?' nuevo':'')+'" onclick="toggleCard(\''+id+'\',event)">';
   if (esHoy) h += '<span class="card-nuevo">Nuevo</span>';
-  h += '<div class="cinfo">';
-  h += '<div class="ctitle">'+tipoIconHTML(p)+esc(p.title)+'</div>';
+  h += '<div class="ctipo-label"><i class="ti '+tm.icon+'"></i>'+esc(tm.label)+'</div>';
+  h += '<div class="ctitle">'+esc(p.title)+(!isExp?'<i class="ti ti-chevron-down card-chev"></i>':'')+'</div>';
   if (isExp) {
-    h += '<div class="cmeta">';
-    if (p.fecha) h += '<span class="pill p-fecha"><i class="ti ti-calendar" style="font-size:10px"></i> '+esc(p.fecha)+'</span>';
-    if (p.num) h += '<span class="pill p-num">'+esc(p.num)+'</span>';
-    if (tema) h += '<span class="pill p-tema">'+esc(tema)+'</span>';
-    if (p.jur) h += '<span class="pill p-jur">'+esc(jurLabel(p.jur))+'</span>';
-    if (p.org) h += '<span class="pill p-org">'+esc(mapOrg(p.org))+'</span>';
-    if (lx) h += '<a href="'+lx+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-link" style="font-size:11px"></i> Expediente</a>';
-    if (lt) h += '<a href="'+lt+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-file-text" style="font-size:11px"></i> '+(p.tipo==='resumen_sesion'?'Fuente oficial':'Texto')+'</a>';
+    h += '<div class="cbody">';
+    h += '<div class="cmeta-col">';
+    if (p.fecha) h += '<span class="mrow m-fecha"><i class="ti ti-calendar"></i>'+esc(p.fecha)+'</span>';
+    if (p.num) h += '<span class="mrow m-num">'+esc(p.num)+'</span>';
+    if (tema) h += '<span class="mrow m-tema">'+esc(tema)+'</span>';
+    if (p.jur) h += '<span class="mrow m-jur">'+esc(jurLabel(p.jur))+'</span>';
+    if (p.org) h += '<span class="mrow m-org">'+esc(mapOrg(p.org))+'</span>';
+    if (lx) h += '<a href="'+lx+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-link"></i> Expediente</a>';
+    if (lt) h += '<a href="'+lt+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="clink"><i class="ti ti-file-text"></i> '+(p.tipo==='resumen_sesion'?'Fuente oficial':'Texto')+'</a>';
     h += '</div>';
+    h += '<div class="cmain">';
     if (p.autor) h += '<div class="cautor"><i class="ti ti-user" style="font-size:12px"></i> '+esc(p.autor)+'</div>';
     var prefijo = (!p.tipo || p.tipo === 'proyecto_ley') ? 'El proyecto de ley tiene por objeto ' : '';
     h += '<div class="cresumen">'+prefijo+esc(p.resumen||'')+'</div>';
+    h += '</div>';
+    h += '</div>';
   } else {
     h += '<div class="cmeta-min">';
     if (tema) h += '<span class="pill p-tema">'+esc(tema)+'</span>';
     h += '</div>';
   }
-  h += '</div>';
-  if (!isExp) h += '<i class="ti ti-chevron-down card-chev"></i>';
   h += '</div>';
   return h;
 }

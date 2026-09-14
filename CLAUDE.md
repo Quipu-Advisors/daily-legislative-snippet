@@ -10,7 +10,31 @@ desde un módulo admin, y vencimiento de acceso configurable a **cualquier fecha
 
 ---
 
-## Estado actual (actualizado 2026-09-02) — leer esto primero
+## Estado actual (actualizado 2026-09-14) — leer esto primero
+
+**Migrado de Vercel a AWS (2026-09-14).** Misma cuenta que Mulita y DiDi (`873775216030`,
+us-east-1) — decisión de Lucas de consolidar infra, ver sección "Arquitectura AWS" más abajo
+para el detalle completo (buckets, Lambda, API Gateway, EventBridge, certificados). Resumen:
+`index.html`/`admin.html` pasaron a S3+CloudFront (estático, sin servidor); `api/sync.js` (el
+único código de servidor) se reescribió como Lambda (`lambda/handler.mjs`) — **`api/sync.js` en
+la raíz queda como referencia histórica de la época Vercel, ya no se deploya ni se ejecuta**; los
+crons pasaron de `vercel.json` a EventBridge Scheduler, invocando la Lambda directo (sin
+`CRON_SECRET`, ya no hace falta — la invocación ya viene autenticada por IAM). Vercel queda de
+respaldo hasta que Lucas confirme que se puede dar de baja del todo.
+
+**Rebranding en paralelo (2026-09-14):** nombre comercial pasó de "Daily Legislative Snippet" a
+**"Daily Snippet"** — logo de Quipu (el ícono del sol, `quipu-mark.png`) reemplazó el ícono
+genérico en el nav. `CONTACT_EMAIL`/asunto del mailto y el `<title>` actualizados. El nombre del
+repo, el bucket S3 y los comentarios internos del código **no** se renombraron (bajo riesgo, alto
+esfuerzo para algo que no es visible al usuario) — si en algún momento se decide un rename
+completo, evaluarlo aparte.
+
+**Resumen diario por mail: ya está 100% andando en producción**, verificado con un envío real
+(2026-09-14) — `RESEND_API_KEY`/`DIGEST_FROM_EMAIL` cargados en `lambda/env.json` y confirmados
+funcionando (dominio `quipuadvisors.com` verificado en Resend, remitente `monitoreo@quipuadvisors.com`).
+Contenido simplificado a una sola línea + sectores del día + botón al portal (ver bullet de abajo).
+
+## Estado en 2026-09-02 (histórico — la arquitectura de hosting descripta acá ya no aplica)
 
 Deploy end-to-end funcionando, en producción, con datos reales sincronizándose desde Smart
 Snippet. **Repo público de nuevo desde 2026-09-04** (pasó a privado el 09-01, pero el plan Hobby
@@ -238,30 +262,89 @@ y jurisdicción argentina).
   roto no tira error de consola — verificar con `curl -sI <url>` antes de fijar una versión.
 - **`admin.html`** — módulo de Research: crear/editar cuentas, definir sectores y
   jurisdicciones por cuenta, vencimiento del trial, y el botón "Sincronizar ahora".
-- **`api/sync.js`** — función serverless (Vercel) que hace el sync: lee la tabla `projects`
-  interna con claves en variables de entorno y publica a la base de prospectos. La dispara
-  **dos crons diarios, 13:00 y 16:00 ART** (`vercel.json`, expresado en UTC) o el botón del admin.
-  Hobby permite varios cron jobs por proyecto mientras cada uno corra ≤1 vez/día (no es "un cron
-  total") — igual no asegura el minuto exacto, cada uno puede disparar en cualquier momento
-  dentro de esa hora (±59 min, límite documentado de Vercel Hobby). `admin_sync_projects` hace
-  `upsert` por fecha (`on conflict (date) do update`), así que correrlo varias veces al día no
-  duplica nada — pisa la fila del día con el snapshot más reciente cada vez.
+- **`lambda/handler.mjs`** — la Lambda que hace el sync (reemplaza a `api/sync.js`, ver
+  "Arquitectura AWS"): lee la tabla `projects` interna y publica a la base de prospectos, y
+  manda el resumen diario por mail. La disparan **dos EventBridge Schedules diarios, 13:00 y
+  16:00 ART** invocando la función directo (sin pasar por HTTP), o el botón "Sincronizar ahora"
+  de `admin.html` vía `POST /api/sync` (API Gateway → misma Lambda, body `{admin: "..."}`
+  validado contra `admin_check`). `admin_sync_projects` hace `upsert` por fecha
+  (`on conflict (date) do update`), así que correrlo varias veces al día no duplica nada — pisa
+  la fila del día con el snapshot más reciente cada vez.
+- **`api/sync.js`** — **legacy de la época Vercel, ya no se deploya ni se ejecuta.** Se dejó sin
+  borrar como referencia de lectura (misma lógica, forma distinta de recibir la invocación) —
+  cualquier cambio de lógica de negocio va en `lambda/handler.mjs`, no acá.
 - **`setup.sql`** — esquema completo de la base nueva. Se corre una vez en el SQL Editor
   de Supabase (y de nuevo si se quiere cambiar la contraseña admin).
-- **Hosting:** Vercel (estáticos + función + cron), conectado a este repo — cada push a
-  `main` redeploya solo. **Datos:** proyecto Supabase propio (distinto del interno).
-- Sin build, sin frameworks. El único código de servidor es `api/sync.js`.
+- **Hosting:** AWS (S3 + CloudFront para lo estático, Lambda + API Gateway para el sync) — ver
+  "Arquitectura AWS" abajo para el detalle completo. **Datos:** proyecto Supabase propio
+  (distinto del interno), sin cambios por la migración.
+- Sin build, sin frameworks. El único código de servidor es `lambda/handler.mjs`.
 
-### Variables de entorno (Vercel → Settings → Environment Variables)
+## Arquitectura AWS
+
+Todo vive en la cuenta de AWS de Quipu (`873775216030`, us-east-1) — la misma cuenta donde
+corren Mulita (EC2) y DiDi (Lambda+API Gateway), aislado por nombre de recurso (`quipu-dls-*`,
+`dls-tracker-*`) igual que DiDi aísla `didi-tracker-*`.
+
+| Recurso | Nombre/ID |
+|---|---|
+| Bucket S3 (estático) | `quipu-dls-web` (`index.html`, `admin.html`, `quipu-mark.png`) |
+| Distribución CloudFront | `EHWKTOZ46VMUV` — origin S3 vía OAC (bucket privado) + segundo origin API Gateway con path pattern `/api/*` (así `admin.html` sigue llamando a `/api/sync` relativo, sin CORS) |
+| Función Lambda (sync) | `dls-tracker-sync` (Node.js 20.x, sin dependencias npm — solo `fetch` nativo) |
+| Rol de ejecución Lambda | `dls-tracker-lambda-role` (solo permiso de logs a CloudWatch) |
+| API Gateway (HTTP API) | `g2yvgyx255` — una sola ruta, `POST /api/sync` |
+| Rol para EventBridge | `dls-tracker-scheduler-role` (solo `lambda:InvokeFunction` sobre `dls-tracker-sync`) |
+| Schedules (EventBridge Scheduler) | `dls-tracker-sync-1300art`, `dls-tracker-sync-1600art` (grupo `default`) |
+| Dominio propio | `monitoreolegislativo.quipuadvisors.com` → CloudFront (CNAME en GoDaddy) |
+| Certificado HTTPS | ACM, us-east-1, alias en la distribución de CloudFront |
+
+**Por qué S3+CloudFront para lo estático y no todo en Lambda (como DiDi):** a diferencia de
+DiDi, esta app es casi toda estática (`index.html`/`admin.html` le pegan directo a Supabase
+desde el browser) — solo `api/sync.js` necesitaba servidor de verdad (secretos: clave de la
+base interna, contraseña admin, API key de Resend). Separarlo así es más barato (sin cómputo
+para las páginas, que es el 95% del tráfico) y más rápido (CloudFront no tiene cold start; una
+Lambda que se invoca 2 veces por día sí lo tendría en cada request de página).
+
+**CAA — si hay que recrear un certificado ACM para un dominio que hoy CNAMea a Vercel:** la
+validación DNS de ACM falla con `CAA_ERROR` mientras el CNAME siga apuntando a Vercel, porque
+la verificación de CAA sigue la cadena del CNAME y el DNS de Vercel tiene su propio CAA
+(`letsencrypt.org`/`pki.goog`/etc., no Amazon). No hay forma de resolverlo sin mover primero el
+CNAME al destino de AWS (CloudFront/API Gateway) — implica una ventana corta sin servicio hasta
+terminar de emitir el certificado y asociarlo a la distribución. Los certificados que fallan por
+esto quedan en estado `FAILED` para siempre — hay que borrarlos y pedir uno nuevo, no reintentan
+solos aunque se arregle el DNS después.
+
+**Deploy de la Lambda:**
+```bash
+cd lambda
+bash deploy.sh
+```
+Copia el código actual, zippea (`handler.mjs`, sin `node_modules` — no hace falta), y si la
+función ya existe le actualiza código + variables de entorno; si no, la crea junto con el rol.
+Las variables viven en `lambda/env.json` (❌ nunca se commitea, está en `.gitignore`) — ver tabla
+de variables más abajo.
+
+**Deploy de lo estático (`index.html`/`admin.html`):**
+```bash
+aws s3 cp index.html s3://quipu-dls-web/index.html --content-type "text/html; charset=utf-8" --cache-control "no-cache"
+aws s3 cp admin.html s3://quipu-dls-web/admin.html --content-type "text/html; charset=utf-8" --cache-control "no-cache"
+aws cloudfront create-invalidation --distribution-id EHWKTOZ46VMUV --paths "/*"
+```
+La invalidación de CloudFront es necesaria — sin ella el cambio puede tardar hasta 24hs en
+verse (TTL del cache de CloudFront), aunque el archivo en S3 ya esté actualizado.
+
+### Variables de entorno (`lambda/env.json`, nunca se commitea)
 
 | Variable | Qué es |
 |---|---|
 | `INTERNAL_SB_ANON` | Clave pública (anon) de la base interna del Smart Snippet |
 | `DLS_SB_URL` / `DLS_SB_ANON` | URL y clave pública del Supabase de esta app |
-| `DLS_ADMIN_PASS` | Contraseña admin (la del `setup.sql`) — la usa el cron |
-| `CRON_SECRET` | String largo aleatorio; Vercel lo manda en el header del cron |
-| `RESEND_API_KEY` | API key de [resend.com](https://resend.com) — para el resumen diario por mail |
-| `DIGEST_FROM_EMAIL` | Remitente verificado en Resend, ej. `notificaciones@quipuadvisors.com` — necesita el dominio verificado (registros DNS) en Resend, no alcanza con la clave sola |
+| `DLS_ADMIN_PASS` | Contraseña admin (la del `setup.sql`) — la usa el cron. **Tiene que ser la contraseña real vigente**, no una inventada — se valida contra el hash guardado en Supabase (`admin_check`/`_require_admin`), si no coincide exactamente falla con `admin_unauthorized` |
+| `RESEND_API_KEY` | API key de [resend.com](https://resend.com) — cargada y confirmada funcionando (2026-09-14) |
+| `DIGEST_FROM_EMAIL` | `monitoreo@quipuadvisors.com` — dominio `quipuadvisors.com` verificado en Resend (SPF/DKIM vía subdominio `send.`) |
+
+Ya no existe `CRON_SECRET` — los crons invocan la Lambda directo por IAM (EventBridge
+Scheduler), no por HTTP con un secreto compartido como hacía Vercel Cron.
 
 ### Modelo de seguridad (distinto del interno, a propósito)
 
@@ -280,8 +363,8 @@ y jurisdicción argentina).
   `admin_show_password`). La clave de cifrado (`PASS_ENC_KEY`) está hardcodeada en las 4
   funciones que la usan en `setup.sql` — cuentas creadas antes de este cambio (con el hash
   bcrypt viejo) no se pueden "ver", solo resetear una vez para pasarlas al formato nuevo.
-- La clave anon de la base **interna** NO está en el código: vive como variable de entorno
-  en Vercel y solo la usa `api/sync.js`.
+- La clave anon de la base **interna** NO está en el código: vive en `lambda/env.json`
+  (nunca se commitea) y solo la usa `lambda/handler.mjs`.
 - ⚠️ **Ojo con `search_path`**: `crypt`/`gen_salt`/`pgp_sym_encrypt`/`pgp_sym_decrypt` de
   pgcrypto viven en el schema `extensions` de Supabase, no en `public`. Las funciones fijan
   `search_path = public` por seguridad, así que **toda** llamada a estas funciones debe ir
@@ -308,12 +391,14 @@ y jurisdicción argentina).
 |---|---|
 | Pegar URL/clave del Supabase nuevo | `SB_URL` / `SB_ANON` al inicio del `<script>` en **ambos** HTML |
 | Cambiar el email de contacto del pie | `CONTACT_EMAIL` en `index.html` |
-| Cambiar la contraseña de admin | Re-correr el INSERT de la sección 2 de `setup.sql` **y** actualizar `DLS_ADMIN_PASS` en Vercel |
-| Cambiar la hora del cron | array `crons` en `vercel.json` (en UTC: hoy `0 16 * * *` = 13:00 ART y `0 19 * * *` = 16:00 ART). Hobby: cada entrada ≤1 vez/día, precisión ±59 min — no más de una entrada por hora exacta. |
-| Cambiar la ventana de días | `SYNC_DAYS` en admin.html y `api/sync.js`, **y** los `30`/`45` en `setup.sql` (`prospect_projects` y `admin_sync_projects`) |
-| Agregar sectores/provincias | `SECTORES`/`PROVINCIAS` en ambos HTML y en `api/sync.js` (deben coincidir con la app interna) |
+| Cambiar la contraseña de admin | Re-correr el INSERT de la sección 2 de `setup.sql` **y** actualizar `DLS_ADMIN_PASS` en `lambda/env.json` + `bash lambda/deploy.sh` |
+| Cambiar la hora del cron | Editar los dos EventBridge Schedules (`dls-tracker-sync-1300art`/`-1600art`, grupo `default`) con `aws scheduler update-schedule` — expresión cron en UTC (hoy `cron(0 16 * * ? *)` = 13:00 ART, `cron(0 19 * * ? *)` = 16:00 ART) |
+| Cambiar la ventana de días | `SYNC_DAYS` en admin.html y `lambda/handler.mjs`, **y** los `30`/`45` en `setup.sql` (`prospect_projects` y `admin_sync_projects`) |
+| Agregar sectores/provincias | `SECTORES`/`PROVINCIAS` en ambos HTML y en `lambda/handler.mjs` (deben coincidir con la app interna) |
 | Texto del disclaimer / CTA | función `renderMain()` en `index.html` |
-| URL de la base interna (solo sync) | `INTERNAL_SB_URL` en `api/sync.js` |
+| URL de la base interna (solo sync) | `INTERNAL_SB_URL` en `lambda/handler.mjs` |
+| Cambiar código de la Lambda | Editar `lambda/handler.mjs` → `bash lambda/deploy.sh` (ver "Arquitectura AWS") |
+| Cambiar `index.html`/`admin.html` | Editar el archivo → subir a S3 + invalidar CloudFront (comandos en "Arquitectura AWS") |
 
 ---
 

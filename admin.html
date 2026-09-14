@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Legislative Snippet — Admin</title>
+<title>Daily Snippet — Admin</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.46.0/tabler-icons.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
@@ -12,6 +12,7 @@
 body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .nav{display:flex;align-items:center;background:var(--blue);border-bottom:2px solid var(--accent);padding:0 1.25rem;height:48px}
 .nav-logo{font-size:15px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-right:10px;display:flex;align-items:center;gap:7px;color:#fff}
+.nav-logo-img{height:24px;width:auto}
 .nav-logo span{color:var(--accent)}
 .nav-admin{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 8px;border-radius:var(--radius)}
 #nav-tabs{display:flex;align-items:center;height:48px;margin-left:14px}
@@ -106,7 +107,7 @@ body{font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-s
   <div class="overlay-box"><i class="ti ti-loader-2 spin"></i><p id="overlay-msg">Cargando...</p></div>
 </div>
 <nav class="nav">
-  <div class="nav-logo"><i class="ti ti-news" style="color:var(--accent)"></i> Daily Legislative <span>Snippet</span></div>
+  <div class="nav-logo"><img src="quipu-mark.png" alt="Quipu" class="nav-logo-img"> DAILY <span>SNIPPET</span></div>
   <span class="nav-admin">Admin</span>
   <div id="nav-tabs"></div>
   <div class="nav-right" id="nav-right"></div>
@@ -183,7 +184,7 @@ function renderGate(msg) {
   document.getElementById('nav-tabs').innerHTML=''; document.getElementById('nav-right').innerHTML='';
   var h = '<div class="login-wrap"><div class="login-card">';
   h += '<div class="login-title">Administración</div>';
-  h += '<div class="login-sub">Cuentas de prospectos y sincronización del Daily Legislative Snippet.</div>';
+  h += '<div class="login-sub">Cuentas de prospectos y sincronización del Daily Snippet.</div>';
   if (msg) h += '<div class="alert error" style="margin:0 0 10px">'+esc(msg)+'</div>';
   h += '<input type="password" class="gate-input" id="gate-pass" placeholder="Contraseña de administración" onkeydown="if(event.key===\'Enter\')doGate()">';
   h += '<button class="btn primary" style="width:100%;justify-content:center" onclick="doGate()"><i class="ti ti-lock-open"></i> Entrar</button>';

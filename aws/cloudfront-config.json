@@ -1,0 +1,25 @@
+{
+  "CallerReference": "dls-static-2026-09-14",
+  "Comment": "DLS -- index.html/admin.html en S3 (privado via OAC)",
+  "Enabled": true,
+  "DefaultRootObject": "index.html",
+  "Origins": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "Id": "quipu-dls-web-origin",
+        "DomainName": "quipu-dls-web.s3.us-east-1.amazonaws.com",
+        "S3OriginConfig": { "OriginAccessIdentity": "" },
+        "OriginAccessControlId": "E7Y8VULBNW1XF"
+      }
+    ]
+  },
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "quipu-dls-web-origin",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "AllowedMethods": { "Quantity": 2, "Items": ["GET", "HEAD"] },
+    "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+    "Compress": true
+  },
+  "PriceClass": "PriceClass_100"
+}
