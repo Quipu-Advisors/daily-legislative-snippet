@@ -409,7 +409,6 @@ function updateBtns() {
 }
 document.addEventListener('click', function(){ ['dd-sec-menu','dd-jur-menu','dd-amb-menu'].forEach(function(id){ var m=document.getElementById(id); if(m)m.classList.remove('open'); }); });
 
-function allSecSelected() { return actives('sec-chk').length === document.querySelectorAll('.sec-chk').length; }
 
 function renderList() {
   var list = document.getElementById('list'); if (!list) return;
@@ -432,15 +431,11 @@ function renderList() {
     h += '<div class="date-hdr"><i class="ti ti-calendar"></i>Reportados el '+esc(fechaLabel(day.date));
     if (esHoy) h += '<span class="hoy-nuevos">'+ps.length+' novedad'+(ps.length!==1?'es':'')+'</span>';
     h += '</div>';
-    if (allSecSelected()) {
-      SEC_ORDER.forEach(function(sec) {
-        var sp = ps.filter(function(p){return p.sector===sec;}); if (!sp.length) return;
-        h += '<div class="group-sector-title"><i class="ti '+sectorIcon(sec)+'"></i>'+esc(sec)+'</div>';
-        JUR_FULL.forEach(function(jur){ var jp=sp.filter(function(p){return p.jur===jur;}); if(!jp.length)return; h+='<div class="group-jur-title">'+esc(jur)+'</div><div class="group-jur-cards">'+jp.map(function(p){return cardHTML(p,esHoy);}).join('')+'</div>'; });
-      });
-    } else {
-      h += '<div class="group-jur-cards">'+ps.map(function(p){return cardHTML(p,esHoy);}).join('')+'</div>';
-    }
+    SEC_ORDER.forEach(function(sec) {
+      var sp = ps.filter(function(p){return p.sector===sec;}); if (!sp.length) return;
+      h += '<div class="group-sector-title"><i class="ti '+sectorIcon(sec)+'"></i>'+esc(sec)+'</div>';
+      JUR_FULL.forEach(function(jur){ var jp=sp.filter(function(p){return p.jur===jur;}); if(!jp.length)return; h+='<div class="group-jur-title">'+esc(jur)+'</div><div class="group-jur-cards">'+jp.map(function(p){return cardHTML(p,esHoy);}).join('')+'</div>'; });
+    });
     h += '</div>';
   });
   if (!any) {
